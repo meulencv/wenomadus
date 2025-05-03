@@ -1,0 +1,49 @@
+{
+  "main_destination": {
+    "name": "S\u00e3o Tom\u00e9 and Pr\u00edncipe",
+    "country": "S\u00e3o Tom\u00e9 and Pr\u00edncipe",
+    "description": "This island nation offers a secluded and romantic escape with stunning beaches, lush rainforests perfect for hiking, and a rich colonial history. It avoids the crowds of typical tourist destinations and provides opportunities for sustainable tourism. The warm weather, delicious local cuisine (focused on fresh seafood), and potential for all-inclusive resorts make it ideal for a relaxing yet adventurous cultural experience. It's also considered safe for tourists.",
+    "best_time_to_visit": "June to September (dry season)"
+  },
+  "places_of_interest": [
+    {
+      "name": "Obo National Park",
+      "type": "nature",
+      "description": "Explore the diverse rainforest ecosystem, hike to waterfalls, and spot unique bird species."
+    },
+    {
+      "name": "Ro\u00e7as (Plantations)",
+      "type": "historical site",
+      "description": "Visit former cocoa and coffee plantations to learn about the islands' colonial history and architecture. Some have been converted into hotels."
+    },
+    {
+      "name": "Pico Grande",
+      "type": "nature",
+      "description": "Hike to the iconic volcanic plug for breathtaking views of the surrounding landscape."
+    },
+    {
+      "name": "Praia Banana",
+      "type": "beach",
+      "description": "Relax on the pristine sands of this secluded beach, known for its crystal-clear waters."
+    }
+  ],
+  "alternative_destinations": [
+    {
+      "name": "Dominica",
+      "country": "Dominica",
+      "reason": "Similar to S\u00e3o Tom\u00e9 and Pr\u00edncipe, Dominica offers lush rainforests, hiking trails, waterfalls, and fewer crowds than other Caribbean islands. It's also focused on eco-tourism."
+    },
+    {
+      "name": "The Azores, Portugal",
+      "country": "Portugal",
+      "reason": "These Portuguese islands offer stunning volcanic landscapes, hiking opportunities, whale watching, and a unique cultural experience. They are less crowded than mainland Portugal and offer a good balance of relaxation and adventure."
+    }
+  ],
+  "travel_tips": [
+    "Learn a few basic Portuguese phrases, as it's the official language.",
+    "Pack light clothing, swimwear, hiking shoes, and insect repellent.",
+    "Book accommodations and tours in advance, especially during peak season (though traveling outside peak season is preferred).",
+    "Be prepared for limited internet access in some areas.",
+    "Respect the local culture and environment by practicing responsible tourism."
+  ]
+}

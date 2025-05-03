@@ -1,0 +1,102 @@
+[
+  {
+    "question": "Do you want a relaxing vacation?",
+    "answer": "yes"
+  },
+  {
+    "question": "Are you interested in cultural experiences?",
+    "answer": "yes"
+  },
+  {
+    "question": "Do you prefer to travel internationally?",
+    "answer": "yes"
+  },
+  {
+    "question": "Do you want a short trip (less than 7 days)?",
+    "answer": "no"
+  },
+  {
+    "question": "Would you mind flying more than 5 hours?",
+    "answer": "no"
+  },
+  {
+    "question": "Would you be willing to stay in a hostel to save money?",
+    "answer": "no"
+  },
+  {
+    "question": "Are you looking for a family-friendly trip?",
+    "answer": "no"
+  },
+  {
+    "question": "Are you looking for a romantic getaway?",
+    "answer": "yes"
+  },
+  {
+    "question": "Are you interested in destinations with historical significance?",
+    "answer": "yes"
+  },
+  {
+    "question": "Do you prefer destinations with warm weather?",
+    "answer": "yes"
+  },
+  {
+    "question": "Do you like adventure activities (hiking, water sports, etc.)?",
+    "answer": "yes"
+  },
+  {
+    "question": "Is visiting beaches important to you?",
+    "answer": "yes"
+  },
+  {
+    "question": "Do you prefer urban destinations over rural ones?",
+    "answer": "no"
+  },
+  {
+    "question": "Do you have a tight budget for this trip?",
+    "answer": "no"
+  },
+  {
+    "question": "Is local cuisine an important part of the trip for you?",
+    "answer": "yes"
+  },
+  {
+    "question": "Do you prefer popular tourist destinations?",
+    "answer": "no"
+  },
+  {
+    "question": "Would you like to visit museums and art galleries?",
+    "answer": "yes"
+  },
+  {
+    "question": "Are you looking for destinations with active nightlife?",
+    "answer": "no"
+  },
+  {
+    "question": "Is it important for you to be able to communicate in your native language?",
+    "answer": "no"
+  },
+  {
+    "question": "Do you prefer all-inclusive resort accommodations?",
+    "answer": "yes"
+  },
+  {
+    "question": "Would you like a destination where you can go shopping?",
+    "answer": "no"
+  },
+  {
+    "question": "Would you avoid traveling during high season to avoid crowds?",
+    "answer": "yes"
+  },
+  {
+    "question": "Is it important that the destination has good public transportation?",
+    "answer": "no"
+  },
+  {
+    "question": "Do you prefer destinations considered safe for tourists?",
+    "answer": "yes"
+  },
+  {
+    "question": "Would you be interested in a destination that promotes sustainable tourism?",
+    "answer": "yes"
+  }
+]

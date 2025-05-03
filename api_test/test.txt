@@ -1,0 +1,81 @@
+
+===== CULTURE API EXAMPLE =====
+
+== Combined Culture Information ==
+
+Making GET request to: https://partners.api.skyscanner.net/apiservices/v3/culture/markets-currencies-languages
+Response status code: 404
+Error response: {
+  "code" : 404,
+  "message" : "HTTP 404 Not Found"
+}
+HTTP Error: 404 Client Error: Not Found for url: https://partners.api.skyscanner.net/apiservices/v3/culture/markets-currencies-languages
+Response content: {
+  "code" : 404,
+  "message" : "HTTP 404 Not Found"
+}
+Error getting culture information: 404 Client Error: Not Found for url: https://partners.api.skyscanner.net/apiservices/v3/culture/markets-currencies-languages
+
+===== FLIGHT SEARCH EXAMPLE (ONE-WAY) =====
+Searching for flights from MAD to BCN on 2025-05-13 for 2 adults...
+
+Making POST request to: https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/create
+Request data summary: {
+  "query": {
+    "market": "ES",
+    "locale": "es-ES",
+    "currency": "EUR",
+    "queryLegs": [
+      {
+        "originPlaceId": {
+          "iata": "MAD"
+        },
+        "destinationPlaceId": ...
+Response status code: 200
+Search status: RESULT_STATUS_INCOMPLETE
+Initial results are incomplete. Polling for more results...
+
+Making GET request to: https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/poll/CrABS0xVdl9TQ04zUU1BMHNnZEhyRHJkTFVrU1JZMG1mRnVNc25GeFZZSUlwT1V0SEo2ekRWb29vTU5BVThUSU5TTTB4M19rOXhMNV9TRlVNSmRtdVBLXzlqOFhLb3FTeWtBNDJsWXRsMEVKZC1MbGJxYjN0d2EzWmRPRGxmS09uZHF5dlhkVEk2QVlQN2ItMzJCMUxMY2stLTdDdGU1b190TktjZXZ5ZUFNVUFFSTBSQUEiLwoCRVMSBWVzLUVTGgNFVVIiFwoFCgNNQUQSBQoDQkNOGgcI6Q8QBRgNKAEwAmABKiRkYzUxYWE3Yy1hMGIwLTRkMGMtYmU3MS0zZjQzYmM3YjdjYzk=-cells1
+Response status code: 404
+Error response: {
+  "code" : 404,
+  "message" : "HTTP 404 Not Found"
+}
+HTTP Error: 404 Client Error: Not Found for url: https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/poll/CrABS0xVdl9TQ04zUU1BMHNnZEhyRHJkTFVrU1JZMG1mRnVNc25GeFZZSUlwT1V0SEo2ekRWb29vTU5BVThUSU5TTTB4M19rOXhMNV9TRlVNSmRtdVBLXzlqOFhLb3FTeWtBNDJsWXRsMEVKZC1MbGJxYjN0d2EzWmRPRGxmS09uZHF5dlhkVEk2QVlQN2ItMzJCMUxMY2stLTdDdGU1b190TktjZXZ5ZUFNVUFFSTBSQUEiLwoCRVMSBWVzLUVTGgNFVVIiFwoFCgNNQUQSBQoDQkNOGgcI6Q8QBRgNKAEwAmABKiRkYzUxYWE3Yy1hMGIwLTRkMGMtYmU3MS0zZjQzYmM3YjdjYzk=-cells1
+Response content: {
+  "code" : 404,
+  "message" : "HTTP 404 Not Found"
+}
+Error in flight search: 404 Client Error: Not Found for url: https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/poll/CrABS0xVdl9TQ04zUU1BMHNnZEhyRHJkTFVrU1JZMG1mRnVNc25GeFZZSUlwT1V0SEo2ekRWb29vTU5BVThUSU5TTTB4M19rOXhMNV9TRlVNSmRtdVBLXzlqOFhLb3FTeWtBNDJsWXRsMEVKZC1MbGJxYjN0d2EzWmRPRGxmS09uZHF5dlhkVEk2QVlQN2ItMzJCMUxMY2stLTdDdGU1b190TktjZXZ5ZUFNVUFFSTBSQUEiLwoCRVMSBWVzLUVTGgNFVVIiFwoFCgNNQUQSBQoDQkNOGgcI6Q8QBRgNKAEwAmABKiRkYzUxYWE3Yy1hMGIwLTRkMGMtYmU3MS0zZjQzYmM3YjdjYzk=-cells1
+
+===== CHEAPEST FLIGHTS: MADRID TO PARIS =====
+Searching for flights from Madrid (MAD) to Paris (PAR) on 2025-06-02...
+
+Making POST request to: https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/create
+Request data summary: {
+  "query": {
+    "market": "ES",
+    "locale": "es-ES",
+    "currency": "EUR",
+    "queryLegs": [
+      {
+        "originPlaceId": {
+          "iata": "MAD"
+        },
+        "destinationPlaceId": ...
+Response status code: 200
+Search status: RESULT_STATUS_INCOMPLETE
+Results incomplete, polling again (attempt 1/5)...
+
+Making GET request to: https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/poll/CrABS0xVdl9TQ04zUU1BMHNnZEhzRHJleC1yS3Zidl9oOHBwY3phLUo5N0pCRXBra2hPcWdOQnhhTHZGVThUSUl0dDk5blBMaTA1X2pmTDZTQV8yWnBoWV94Uk9hVnBvcFFDTUI1V1habEYxUHV3dXZqYXRNOTM5ak44Q3BsNmUyN25ZblJHSmtkQVJBcXBONnpYX1RLbDhmbldoX3pXVVc2dlBjNXZ5ZUFNVUFFSTBSQUEiLwoCRVMSBWVzLUVTGgNFVVIiFwoFCgNNQUQSBQoDUEFSGgcI6Q8QBhgCKAEwAWABKiQwYjk1YTgyMC1jMWViLTRiZGYtYjVjYy1mYWFmZDQ4YWM0YzU=-cells1
+Response status code: 404
+Error response: {
+  "code" : 404,
+  "message" : "HTTP 404 Not Found"
+}
+HTTP Error: 404 Client Error: Not Found for url: https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/poll/CrABS0xVdl9TQ04zUU1BMHNnZEhzRHJleC1yS3Zidl9oOHBwY3phLUo5N0pCRXBra2hPcWdOQnhhTHZGVThUSUl0dDk5blBMaTA1X2pmTDZTQV8yWnBoWV94Uk9hVnBvcFFDTUI1V1habEYxUHV3dXZqYXRNOTM5ak44Q3BsNmUyN25ZblJHSmtkQVJBcXBONnpYX1RLbDhmbldoX3pXVVc2dlBjNXZ5ZUFNVUFFSTBSQUEiLwoCRVMSBWVzLUVTGgNFVVIiFwoFCgNNQUQSBQoDUEFSGgcI6Q8QBhgCKAEwAWABKiQwYjk1YTgyMC1jMWViLTRiZGYtYjVjYy1mYWFmZDQ4YWM0YzU=-cells1
+Response content: {
+  "code" : 404,
+  "message" : "HTTP 404 Not Found"
+}
+Error finding cheapest flights: 404 Client Error: Not Found for url: https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/poll/CrABS0xVdl9TQ04zUU1BMHNnZEhzRHJleC1yS3Zidl9oOHBwY3phLUo5N0pCRXBra2hPcWdOQnhhTHZGVThUSUl0dDk5blBMaTA1X2pmTDZTQV8yWnBoWV94Uk9hVnBvcFFDTUI1V1habEYxUHV3dXZqYXRNOTM5ak44Q3BsNmUyN25ZblJHSmtkQVJBcXBONnpYX1RLbDhmbldoX3pXVVc2dlBjNXZ5ZUFNVUFFSTBSQUEiLwoCRVMSBWVzLUVTGgNFVVIiFwoFCgNNQUQSBQoDUEFSGgcI6Q8QBhgCKAEwAWABKiQwYjk1YTgyMC1jMWViLTRiZGYtYjVjYy1mYWFmZDQ4YWM0YzU=-cells1

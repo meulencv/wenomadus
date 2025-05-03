@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:countries_world_map/countries_world_map.dart';
-import 'package:countries_world_map/data/maps/world_map.dart';
+import 'package:countries_world_map/data/world_map.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -10,18 +10,19 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // Set to keep track of selected countries
-  final Set<String> _selectedCountries = {};
+  // Mapa de países seleccionados (código del país -> boolean)
+  final Map<String, bool> _selectedCountries = {};
   
-  // Color for selected countries
+  // Color del mapa
+  final Color _defaultColor = Colors.grey.shade300;
   final Color _selectedColor = Colors.amber;
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF004D51),
       appBar: AppBar(
-        title: const Text('Map View'),
+        title: const Text('Mapa Interactivo'),
         backgroundColor: const Color(0xFF004D51),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -32,7 +33,7 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Interactive World Map',
+              'Mapa Interactivo Mundial',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -41,7 +42,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Tap on a country to select or unselect it',
+              'Toca un país para seleccionarlo',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 14,
@@ -49,43 +50,60 @@ class _MapScreenState extends State<MapScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: SimpleWorldMap(
-                // Map configuration
-                map: Maps.worldMap,
-                // Country hover callbacks
-                onCountrySelected: (country) {
-                  setState(() {
-                    if (_selectedCountries.contains(country)) {
-                      _selectedCountries.remove(country);
-                    } else {
-                      _selectedCountries.add(country);
-                    }
-                  });
-                  // Show country name when tapped
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Selected: $country'),
-                      duration: const Duration(seconds: 1),
-                      backgroundColor: const Color(0xFF004D51),
+              child: InteractiveViewer(
+                boundaryMargin: const EdgeInsets.all(20.0),
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: WorldMap(
+                    // Configuración del mapa mundial
+                    styleOptions: MapStyleOptions(
+                      defaultColor: _defaultColor,
+                      defaultBorderColor: const Color(0xFF004D51),
+                      defaultBorderStrokeWidth: 1.0,
                     ),
-                  );
-                },
-                // Country colors
-                countryColors: Map.fromEntries(
-                  _selectedCountries.map(
-                    (countryCode) => MapEntry(countryCode, _selectedColor),
+                    // Detectar toques en países
+                    onCountryTap: (context, countryCode) {
+                      setState(() {
+                        // Alternar la selección del país
+                        if (_selectedCountries.containsKey(countryCode)) {
+                          _selectedCountries.remove(countryCode);
+                        } else {
+                          _selectedCountries[countryCode] = true;
+                        }
+                      });
+                      
+                      // Mostrar información sobre el país seleccionado
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            _selectedCountries.containsKey(countryCode)
+                                ? 'País $countryCode seleccionado'
+                                : 'País $countryCode deseleccionado',
+                          ),
+                          duration: const Duration(seconds: 1),
+                          backgroundColor: const Color(0xFF004D51),
+                        ),
+                      );
+                    },
+                    // Color personalizado para países seleccionados
+                    countryColors: Map.fromEntries(
+                      _selectedCountries.keys.map(
+                        (code) => MapEntry(code, _selectedColor),
+                      ),
+                    ),
+                    // Usar el mapa mundial
+                    map: worldMap,
                   ),
                 ),
-                // Default styling
-                defaultCountryColor: Colors.grey.shade300,
-                defaultCountryBorderColor: const Color(0xFF004D51),
-                countryBorderWidth: 1.0,
               ),
             ),
             if (_selectedCountries.isNotEmpty) ...[
               const SizedBox(height: 20),
               Text(
-                'Selected Countries: ${_selectedCountries.length}',
+                'Países Seleccionados: ${_selectedCountries.length}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -94,14 +112,14 @@ class _MapScreenState extends State<MapScreen> {
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
-                children: _selectedCountries
-                    .map((code) => Chip(
-                          label: Text(code),
-                          backgroundColor: _selectedColor,
+                children: _selectedCountries.keys
+                    .map((countryCode) => Chip(
+                          label: Text(countryCode),
+                          backgroundColor: Colors.amber,
                           labelStyle: const TextStyle(color: Colors.black),
                           onDeleted: () {
                             setState(() {
-                              _selectedCountries.remove(code);
+                              _selectedCountries.remove(countryCode);
                             });
                           },
                         ))

@@ -195,7 +195,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 20, vertical: 10),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withOpacity(
+                                        0.5), // Cambiado de 0.8 a 0.5 para más transparencia
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
@@ -272,6 +273,69 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                 ),
               ],
             ),
+            // Añade estos elementos al final del Stack, después del Column existente
+            if (!isRoomCompleted && questions.isNotEmpty)
+              Positioned(
+                left: 30,
+                bottom: 30,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'NO',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (!isRoomCompleted && questions.isNotEmpty)
+              Positioned(
+                right: 30,
+                bottom: 30,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: const [
+                      Text(
+                        'YES',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

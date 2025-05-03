@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'result_screen.dart'; // Importamos la nueva pantalla
+import 'package:shared_preferences/shared_preferences.dart';
+import 'result_screen.dart';
 
 class RoomDetailScreen extends StatefulWidget {
   final String roomId;
@@ -17,17 +18,38 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   final List<Map<String, dynamic>> questions = [];
   final List<int?> binaryResponses = [];
   bool isLoading = true;
+  bool isRoomCompleted = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchQuestions();
+    _checkRoomCompletion();
   }
 
   @override
   void dispose() {
     controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkRoomCompletion() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isRoomCompleted =
+          prefs.getBool('room_${widget.roomId}_completed') ?? false;
+    });
+    if (!isRoomCompleted) {
+      await _fetchQuestions();
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _markRoomAsCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('room_${widget.roomId}_completed', true);
   }
 
   Future<void> _fetchQuestions() async {
@@ -59,6 +81,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
       );
       debugPrint(
           'Successfully updated room responses for room ${widget.roomId}');
+      await _markRoomAsCompleted();
     } catch (e) {
       debugPrint('Error updating room responses: $e');
     }
@@ -66,7 +89,6 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
 
   Future<void> _navigateToResultScreen() async {
     try {
-      // Obtener los datos de la sala
       final response = await Supabase.instance.client
           .from('rooms')
           .select('responses_list, response_ai')
@@ -133,7 +155,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
               ),
             ),
             Expanded(
-              child: questions.isNotEmpty
+              child: !isRoomCompleted && questions.isNotEmpty
                   ? CardSwiper(
                       controller: controller,
                       cardsCount: questions.length,
@@ -262,6 +284,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   void _onEnd() {
     setState(() {
       questions.clear();
+      isRoomCompleted = true;
     });
     _updateRoomResponses();
   }

@@ -81,6 +81,9 @@ class _ResultScreenState extends State<ResultScreen> {
       // Obtener la recomendación
       final recommendation = await getTravelRecommendation(questionsString);
 
+      // Guardar la recomendación en Supabase
+      await _saveRecommendationToSupabase(recommendation);
+
       setState(() {
         travelRecommendation = recommendation;
         isLoadingRecommendation = false;
@@ -93,6 +96,20 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  Future<void> _saveRecommendationToSupabase(
+      Map<String, dynamic> recommendation) async {
+    try {
+      // Actualizar el campo response_ai en la tabla rooms para la sala actual
+      await Supabase.instance.client
+          .from('rooms')
+          .update({'response_ai': recommendation}).eq('id', widget.roomId);
+
+      debugPrint('Recomendación guardada en Supabase correctamente');
+    } catch (e) {
+      debugPrint('Error al guardar la recomendación en Supabase: $e');
+    }
+  }
+
   Future<Map<String, dynamic>> getTravelRecommendation(
       String questionsString) async {
     // Replace with your Gemini API key or use a secure method to load it
@@ -102,19 +119,20 @@ class _ResultScreenState extends State<ResultScreen> {
 
     // Create prompt using the provided questions string
     String prompt =
-        'Based on the following travel preferences, recommend one country:\n\n';
+        'Based on the following travel preferences, recommend ONE SPECIFIC CITY (not a country) that fits these preferences:\n\n';
     prompt += questionsString;
     prompt +=
-        '\nReturn a JSON with exactly this format (provide at least 3 places in the itinerario array, each with detailed descriptions and include the number of days to spend at each place):\n';
+        '\nReturn a JSON with exactly this format. Focus on a single specific city (not a country) and provide at least 5 activities or places to visit within that city in the itinerario array. Each place should have detailed descriptions:\n';
     prompt += '''{
+      "ciudad": "City name",
       "pais": "Country name",
-      "descripcion": "Description of the country and why it fits the preferences (at least 100 words)",
+      "descripcion": "Description of the city and why it fits the preferences (at least 100 words)",
       "itinerario": [
         {
-          "nombre": "Place name",
-          "descripcion": "Detailed description of what to do and see (at least 50 words)",
-          "dias": "Number of days recommended to spend here",
-          "imagen": "Short description of an iconic image for this place (for example: 'snowy mountain peaks')"
+          "nombre": "Place or activity name",
+          "descripcion": "Detailed description of what to do and see at this place or activity (at least 50 words)",
+          "dias": "Number of days or hours recommended to spend here",
+          "imagen": "Short description of an iconic image for this place (for example: 'historic plaza with fountain')"
         }
       ]
     }''';
@@ -362,7 +380,10 @@ class _ResultScreenState extends State<ResultScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                '${travelRecommendation!['pais']}',
+                                                travelRecommendation!
+                                                        .containsKey('ciudad')
+                                                    ? '${travelRecommendation!['ciudad']}, ${travelRecommendation!['pais']}'
+                                                    : '${travelRecommendation!['pais']}',
                                                 style: const TextStyle(
                                                   fontSize: 24,
                                                   color: Color(0xFF1E6C71),
@@ -487,7 +508,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                                                             15),
                                                               ),
                                                               child: Text(
-                                                                '${place['dias']} días',
+                                                                '${place['dias']}',
                                                                 style:
                                                                     const TextStyle(
                                                                   fontSize: 14,

@@ -452,22 +452,55 @@ class _HomeScreenState extends State<HomeScreen> {
                                         context: context,
                                         builder: (BuildContext context) {
                                           return AlertDialog(
+                                            backgroundColor: const Color(0xFFE8F3F3),
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(15),
                                             ),
-                                            title: Text('Delete Tribe'),
-                                            content: Text('Are you sure you want to delete "${room['name']}" tribe? This action cannot be undone.'),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                child: Text('Cancel'),
-                                                onPressed: () => Navigator.of(context).pop(false),
+                                            title: const Text(
+                                              'Delete Tribe',
+                                              style: TextStyle(
+                                                color: Color(0xFF004D51),
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              TextButton(
-                                                child: Text(
-                                                  'Delete',
-                                                  style: TextStyle(color: Colors.red),
+                                            ),
+                                            content: Text(
+                                              'Are you sure you want to delete "${room['name']}" tribe? This action cannot be undone.',
+                                              style: const TextStyle(
+                                                color: Color(0xFF004D51),
+                                              ),
+                                            ),
+                                            actions: <Widget>[
+                                              ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(10),
+                                                  ),
+                                                ),
+                                                onPressed: () => Navigator.of(context).pop(false),
+                                                child: const Text(
+                                                  'Cancel',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF1E6C71),
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(10),
+                                                  ),
                                                 ),
                                                 onPressed: () => Navigator.of(context).pop(true),
+                                                child: const Text(
+                                                  'Delete',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
                                               ),
                                             ],
                                           );

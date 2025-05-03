@@ -124,137 +124,134 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF004D51),
       appBar: AppBar(
-        title: const Text('Detalles de la sala'),
-        backgroundColor: const Color(0xFF1E6C71),
+        title: const Text(''),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Text(
-                    'Código de la sala:',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
+            // La imagen de fondo solo se muestra cuando hay preguntas y la sala no está completada
+            if (isRoomCompleted && !questions.isNotEmpty)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.2, // 80% transparencia
+                  child: Image.asset(
+                    'assets/going.png', // Corregido a extensión png estándar
+                    fit: BoxFit.cover,
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.roomId,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            Expanded(
-              child: !isRoomCompleted && questions.isNotEmpty
-                  ? CardSwiper(
-                      controller: controller,
-                      cardsCount: questions.length,
-                      onSwipe: _onSwipe,
-                      onEnd: _onEnd,
-                      allowedSwipeDirection: const AllowedSwipeDirection.only(
-                        left: true,
-                        right: true,
-                      ),
-                      numberOfCardsDisplayed: 3,
-                      backCardOffset: const Offset(40, 40),
-                      padding: const EdgeInsets.all(24.0),
-                      cardBuilder: (
-                        context,
-                        index,
-                        horizontalThresholdPercentage,
-                        verticalThresholdPercentage,
-                      ) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
+            Column(
+              children: [
+                Expanded(
+                  child: !isRoomCompleted && questions.isNotEmpty
+                      ? CardSwiper(
+                          controller: controller,
+                          cardsCount: questions.length,
+                          onSwipe: _onSwipe,
+                          onEnd: _onEnd,
+                          allowedSwipeDirection:
+                              const AllowedSwipeDirection.only(
+                            left: true,
+                            right: true,
                           ),
-                          child: Center(
-                            child: Text(
-                              questions[index]['text'],
-                              style: const TextStyle(
-                                color: Color(0xFF004D51),
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                          numberOfCardsDisplayed: 3,
+                          backCardOffset: const Offset(40, 40),
+                          padding: const EdgeInsets.all(24.0),
+                          cardBuilder: (
+                            context,
+                            index,
+                            horizontalThresholdPercentage,
+                            verticalThresholdPercentage,
+                          ) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              '¡No hay más cartas!',
-                              style: TextStyle(
-                                color: Color(0xFF004D51),
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              'Respuestas finales:',
-                              style: TextStyle(
-                                color: Color(0xFF004D51),
-                                fontSize: 18,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              binaryResponses.toString(),
-                              style: const TextStyle(
-                                color: Color(0xFF004D51),
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 30),
-                            ElevatedButton(
-                              onPressed: _navigateToResultScreen,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1E6C71),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 15),
-                              ),
-                              child: const Text(
-                                'Decidir lugar',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                              child: Center(
+                                child: Text(
+                                  questions[index]['text'],
+                                  style: const TextStyle(
+                                    color: Color(0xFF004D51),
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
+                            );
+                          },
+                        )
+                      : Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  spreadRadius: 3,
+                                  blurRadius: 7,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
                             ),
-                          ],
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.explore,
+                                  color: Color(0xFF004D51),
+                                  size: 50,
+                                ),
+                                const SizedBox(height: 20),
+                                const Text(
+                                  'See where we\'re going!!!',
+                                  style: TextStyle(
+                                    color: Color(0xFF004D51),
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 30),
+                                ElevatedButton(
+                                  onPressed: _navigateToResultScreen,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF1E6C71),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 40, vertical: 15),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 5,
+                                  ),
+                                  child: const Text(
+                                    'Discover Destination',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                ),
+              ],
             ),
           ],
         ),

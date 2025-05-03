@@ -566,8 +566,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => CreateRoomScreen()));
         } else if (icon == Icons.public) {
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => MapScreen()));
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => MapScreen()));
         } else {
           // Manejar otros botones si es necesario
         }

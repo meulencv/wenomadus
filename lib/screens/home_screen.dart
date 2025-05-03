@@ -433,8 +433,81 @@ class _HomeScreenState extends State<HomeScreen> {
                                         color: Colors.white,
                                       ),
                                     ),
-                                    onDismissed: (direction) {
+                                    confirmDismiss: (direction) async {
+                                      final isAdmin = _isUserAdmin(room['admin_user_id']);
+                                      
+                                      // Only admins can delete rooms
+                                      if (!isAdmin) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Only admin can delete tribes'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        return false;
+                                      }
+                                      
+                                      // Show confirmation dialog
+                                      return await showDialog<bool>(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(15),
+                                            ),
+                                            title: Text('Delete Tribe'),
+                                            content: Text('Are you sure you want to delete "${room['name']}" tribe? This action cannot be undone.'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                child: Text('Cancel'),
+                                                onPressed: () => Navigator.of(context).pop(false),
+                                              ),
+                                              TextButton(
+                                                child: Text(
+                                                  'Delete',
+                                                  style: TextStyle(color: Colors.red),
+                                                ),
+                                                onPressed: () => Navigator.of(context).pop(true),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                    onDismissed: (direction) async {
                                       print('sala eliminada');
+                                      try {
+                                        // First delete all room_users associations
+                                        await _supabase
+                                            .from('room_users')
+                                            .delete()
+                                            .eq('room_id', room['id']);
+                                            
+                                        // Then delete the room itself
+                                        await _supabase
+                                            .from('rooms')
+                                            .delete()
+                                            .eq('id', room['id']);
+                                            
+                                        // Remove from local list and update UI
+                                        setState(() {
+                                          _userRooms.removeWhere((item) => item['id'] == room['id']);
+                                        });
+                                        
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Tribe deleted successfully'),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Error deleting tribe: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
                                     },
                                     child: GestureDetector(
                                       onTap: () {

@@ -15,6 +15,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   final CardSwiperController controller = CardSwiperController();
   List<Map<String, dynamic>> questions = [];
   final List<String> swipeResults = [];
+  // Lista para almacenar los resultados binarios (1 para sí, 0 para no)
+  final Map<int, int> binaryResults = {};
   bool isLoading = true;
 
   @override
@@ -187,22 +189,42 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
     int? currentIndex,
     CardSwiperDirection direction,
   ) {
+    int questionId = questions[previousIndex]['id'];
     String questionText = questions[previousIndex]['text'] ?? 'Sin texto';
     String result;
+
+    // Guardar el resultado binario: 1 para sí (derecha), 0 para no (izquierda)
+    int binaryResult;
+
     if (direction == CardSwiperDirection.right) {
       result = '$questionText: SÍ';
-      debugPrint('Card $questionText swiped RIGHT (Yes)');
+      binaryResult = 1;
+      debugPrint('Card $questionText (ID: $questionId) swiped RIGHT (Yes)');
     } else {
       result = '$questionText: NO';
-      debugPrint('Card $questionText swiped LEFT (No)');
+      binaryResult = 0;
+      debugPrint('Card $questionText (ID: $questionId) swiped LEFT (No)');
     }
+
     setState(() {
       swipeResults.add(result);
+      binaryResults[questionId] = binaryResult;
     });
+
     return true;
   }
 
   void _onEnd() {
+    // Crear una lista binaria ordenada según el ID de la pregunta
+    List<int> resultList = [];
+    for (int i = 1; i <= questions.length; i++) {
+      resultList
+          .add(binaryResults[i] ?? 0); // Si no hay resultado, se asume 0 (no)
+    }
+
+    // Imprimir la lista binaria en la consola
+    debugPrint(resultList.toString());
+
     setState(() {
       questions.clear();
     });

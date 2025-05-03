@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NFCScreenScan extends StatefulWidget {
   const NFCScreenScan({Key? key}) : super(key: key);
@@ -12,6 +13,8 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
   bool _isScanning = false;
   String _scanStatus = "Buscando etiquetas NFC...";
   ValueNotifier<dynamic> _tagResult = ValueNotifier(null);
+  final _supabase = Supabase.instance.client;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -46,9 +49,18 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
         onDiscovered: (NfcTag tag) async {
           print('Etiqueta NFC detectada: ${tag.data}');
           _tagResult.value = tag.data;
+          String decodedText = _decodePayload(tag.data);
+
           setState(() {
             _scanStatus = "¡Etiqueta detectada!";
           });
+
+          // Guarda el resultado en Supabase
+          if (decodedText.isNotEmpty &&
+              decodedText != "No se encontró texto en el payload" &&
+              decodedText != "Error al decodificar el payload") {
+            await _saveNfcDataToSupabase(decodedText);
+          }
         },
       );
     } catch (e) {
@@ -56,6 +68,64 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
       setState(() {
         _isScanning = false;
         _scanStatus = "Error al iniciar el escaneo NFC: $e";
+      });
+    }
+  }
+
+  Future<void> _saveNfcDataToSupabase(String nfcData) async {
+    if (_saving) return;
+
+    setState(() {
+      _saving = true;
+      _scanStatus = "Guardando datos...";
+    });
+
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        setState(() {
+          _scanStatus = "Error: Usuario no identificado";
+          _saving = false;
+        });
+        return;
+      }
+
+      // Intenta obtener el registro actual del usuario
+      final response = await _supabase
+          .from('user_characters')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (response == null) {
+        // Si no existe, crea un nuevo registro con un array que contiene el nuevo valor
+        await _supabase.from('user_characters').insert({
+          'user_id': userId,
+          'characters': [nfcData]
+        });
+      } else {
+        // Si existe, actualiza añadiendo el nuevo valor al array existente
+        List<dynamic> characters =
+            List<dynamic>.from(response['characters'] ?? []);
+
+        // Verificar si el elemento ya existe para evitar duplicados
+        if (!characters.contains(nfcData)) {
+          characters.add(nfcData);
+          await _supabase
+              .from('user_characters')
+              .update({'characters': characters}).eq('user_id', userId);
+        }
+      }
+
+      setState(() {
+        _scanStatus = "¡Datos guardados correctamente!";
+        _saving = false;
+      });
+    } catch (e) {
+      print('Error al guardar datos en Supabase: $e');
+      setState(() {
+        _scanStatus = "Error al guardar datos: $e";
+        _saving = false;
       });
     }
   }
@@ -115,12 +185,12 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
                 height: 200,
                 decoration: BoxDecoration(
                   color: _isScanning
-                      ? Colors.green
+                      ? (_saving ? Colors.orange : Colors.green)
                       : Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.nfc,
+                  _saving ? Icons.cloud_upload : Icons.nfc,
                   size: 100,
                   color: _isScanning ? Colors.white : Colors.white70,
                 ),

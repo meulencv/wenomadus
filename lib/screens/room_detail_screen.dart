@@ -56,7 +56,7 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
     try {
       final response = await Supabase.instance.client
           .from('questions')
-          .select('text')
+          .select('text, image_url') // Añadir image_url a la consulta
           .order('id', ascending: true);
       setState(() {
         questions.addAll(response);
@@ -168,8 +168,19 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                           ) {
                             return Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(15),
+                                image: questions[index]['image_url'] != null
+                                    ? DecorationImage(
+                                        image: NetworkImage(
+                                            questions[index]['image_url']),
+                                        fit: BoxFit.cover,
+                                        colorFilter: ColorFilter.mode(
+                                          Colors.black.withOpacity(
+                                              0.3), // Oscurece la imagen para mejorar la legibilidad
+                                          BlendMode.darken,
+                                        ),
+                                      )
+                                    : null,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
@@ -180,14 +191,22 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                                 ],
                               ),
                               child: Center(
-                                child: Text(
-                                  questions[index]['text'],
-                                  style: const TextStyle(
-                                    color: Color(0xFF004D51),
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.8),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  textAlign: TextAlign.center,
+                                  child: Text(
+                                    questions[index]['text'],
+                                    style: const TextStyle(
+                                      color: Color(0xFF004D51),
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ),
                             );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
 import 'create_room_screen.dart';
+import 'map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -13,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final _supabase = Supabase.instance.client;
+  final _tribeCodeController = TextEditingController();
 
   // Lista para almacenar las salas del usuario
   List<Map<String, dynamic>> _userRooms = [];
@@ -22,6 +24,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadUserRooms();
+  }
+
+  @override
+  void dispose() {
+    _tribeCodeController.dispose();
+    super.dispose();
   }
 
   // Cargar las salas del usuario
@@ -152,6 +160,110 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Función para unirse a una sala mediante código
+  Future<void> _joinRoom(String roomId) async {
+    if (roomId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a tribe code'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You must be logged in to join a tribe'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Check if the room exists
+      final roomResponse = await _supabase
+          .from('rooms')
+          .select('id, name')
+          .eq('id', roomId)
+          .maybeSingle();
+
+      if (roomResponse == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No tribe found with that code'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Check if the user is already a member of this room
+      final memberResponse = await _supabase
+          .from('room_users')
+          .select()
+          .eq('room_id', roomId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (memberResponse != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You are already a member of this tribe'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Add the user to the room
+      await _supabase.from('room_users').insert({
+        'room_id': roomId,
+        'user_id': userId,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You have joined the tribe ${roomResponse['name']}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Clear the text field
+      _tribeCodeController.clear();
+
+      // Reload user rooms
+      await _loadUserRooms();
+    } catch (e) {
+      print('Error joining tribe: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error joining tribe: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -186,12 +298,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Expanded(
                       child: TextField(
-                        decoration: InputDecoration(
+                        controller: _tribeCodeController,
+                        decoration: const InputDecoration(
                           hintText: "Tribe code...",
                           hintStyle: TextStyle(color: Colors.grey),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 15),
                         ),
+                        onSubmitted: (value) => _joinRoom(value),
+                      ),
+                    ),
+                    // Botón para unirse
+                    GestureDetector(
+                      onTap: () => _joinRoom(_tribeCodeController.text.trim()),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child:
+                            const Icon(Icons.login, color: Color(0xFF1E6C71)),
                       ),
                     ),
                     // Ícono de QR con función interactiva
@@ -442,6 +565,9 @@ class _HomeScreenState extends State<HomeScreen> {
         if (icon == Icons.add) {
           Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => CreateRoomScreen()));
+        } else if (icon == Icons.public) {
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => MapScreen()));
         } else {
           // Manejar otros botones si es necesario
         }

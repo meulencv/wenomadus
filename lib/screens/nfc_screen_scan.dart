@@ -16,13 +16,11 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
   @override
   void initState() {
     super.initState();
-    // Iniciar el escaneo NFC automáticamente al abrir la pantalla
     _startNFCScan();
   }
 
   @override
   void dispose() {
-    // Detener el escaneo al cerrar la pantalla
     _stopNFCScan();
     super.dispose();
   }
@@ -34,9 +32,8 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
     });
 
     try {
-      // Verificar si NFC está disponible
       bool isAvailable = await NfcManager.instance.isAvailable();
-      
+
       if (!isAvailable) {
         setState(() {
           _isScanning = false;
@@ -45,20 +42,13 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
         return;
       }
 
-      // Iniciar la sesión NFC y escuchar las etiquetas
       NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
           print('Etiqueta NFC detectada: ${tag.data}');
-          
-          // Almacenar los datos en la notificación de valor
           _tagResult.value = tag.data;
-          
           setState(() {
             _scanStatus = "¡Etiqueta detectada!";
           });
-          
-          // Opcional: detener la sesión después de leer una etiqueta
-          // NfcManager.instance.stopSession();
         },
       );
     } catch (e) {
@@ -79,6 +69,26 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
       });
     } catch (e) {
       print('Error al detener el escaneo NFC: $e');
+    }
+  }
+
+  // Función para decodificar el payload
+  String _decodePayload(dynamic tagData) {
+    try {
+      // Acceder al payload dentro de ndef -> cachedMessage -> records
+      var records = tagData['ndef']?['cachedMessage']?['records'];
+      if (records != null && records.isNotEmpty) {
+        var payload = records[0]['payload'];
+        // Saltar el byte de idioma (primeros 3 bytes, asumiendo formato [2, 101, 110])
+        if (payload != null && payload.length > 3) {
+          // Decodificar los bytes restantes como UTF-8
+          return String.fromCharCodes(payload.sublist(3));
+        }
+      }
+      return "No se encontró texto en el payload";
+    } catch (e) {
+      print('Error al decodificar el payload: $e');
+      return "Error al decodificar el payload";
     }
   }
 
@@ -104,7 +114,9 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
                 width: 200,
                 height: 200,
                 decoration: BoxDecoration(
-                  color: _isScanning ? Colors.green : Colors.white.withOpacity(0.2),
+                  color: _isScanning
+                      ? Colors.green
+                      : Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -132,6 +144,8 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
                   if (value == null) {
                     return const SizedBox.shrink();
                   }
+                  // Usar la función para decodificar y mostrar solo el texto
+                  String decodedText = _decodePayload(value);
                   return Container(
                     padding: const EdgeInsets.all(20),
                     margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -140,7 +154,7 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      'Información leída:\n${value.toString()}',
+                      'Información leída:\n$decodedText',
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   );

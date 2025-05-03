@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wenomadus/config/supabase_config.dart';
+import 'package:wenomadus/screens/home_screen.dart';
 import 'package:wenomadus/screens/welcome_screen.dart';
 
 void main() async {
@@ -19,42 +20,36 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Travel App',
-      theme: ThemeData(
-        useMaterial3: true,
-        primaryColor: const Color(0xFF0770E3),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0770E3),
-          primary: const Color(0xFF0770E3),
-          secondary: const Color(0xFF00A698),
-        ),
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF111236),
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 16,
-            color: Color(0xFF68697F),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0770E3),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-      ),
-      home: const WelcomeScreen(),
+    return const MaterialApp(
+      title: 'Supabase Flutter Demo',
+      home: AuthGate(),
     );
+  }
+}
+
+class AuthGate extends StatefulWidget {
+  const AuthGate({Key? key}) : super(key: key);
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _user = Supabase.instance.client.auth.currentUser;
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      setState(() {
+        _user = data.session?.user;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _user == null ? const WelcomeScreen() : const HomeScreen();
   }
 }

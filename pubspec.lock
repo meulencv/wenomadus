@@ -72,8 +72,7 @@ packages:
       sha256: "2f5709ae4d3d59dd8f7cd309b4e023046b57d8a6c82130785d2b0e5868084e76"
       url: "https://pub.dev"
     source: hosted
-<<<<<<< HEAD
-    version: "1.18.0"
+    version: "1.19.1"
   confetti:
     dependency: "direct main"
     description:
@@ -90,9 +89,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.4+2"
-=======
-    version: "1.19.1"
->>>>>>> d1497ae0c70952141ef18ca6c9750f7b2c2d96ca
   crypto:
     dependency: transitive
     description:
@@ -488,8 +484,7 @@ packages:
       sha256: "254ee5351d6cb365c859e20ee823c3bb479bf4a293c22d17a9f1bf144ce86f7c"
       url: "https://pub.dev"
     source: hosted
-<<<<<<< HEAD
-    version: "1.10.0"
+    version: "1.10.1"
   sprintf:
     dependency: transitive
     description:
@@ -498,9 +493,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.0"
-=======
-    version: "1.10.1"
->>>>>>> d1497ae0c70952141ef18ca6c9750f7b2c2d96ca
   stack_trace:
     dependency: transitive
     description:

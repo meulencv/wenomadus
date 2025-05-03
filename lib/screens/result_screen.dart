@@ -24,6 +24,9 @@ class _ResultScreenState extends State<ResultScreen> {
   List<Map<String, dynamic>> questions = [];
   Map<String, dynamic>? travelRecommendation;
   bool isLoadingRecommendation = false;
+  double? cheapestFlightPrice;
+  String? cheapestFlightDate;
+  bool isLoadingFlightPrice = false;
 
   @override
   void initState() {
@@ -31,6 +34,7 @@ class _ResultScreenState extends State<ResultScreen> {
     _fetchQuestions();
   }
 
+  // Fetch questions from Supabase
   Future<void> _fetchQuestions() async {
     try {
       final response = await Supabase.instance.client
@@ -42,8 +46,8 @@ class _ResultScreenState extends State<ResultScreen> {
         isLoading = false;
       });
 
-      // Una vez que tenemos las preguntas, podemos obtener la recomendación
-      _getTravelRecommendation();
+      // Fetch travel recommendation and flight price
+      await _getTravelRecommendation();
     } catch (e) {
       debugPrint('Error fetching questions: $e');
       setState(() {
@@ -52,6 +56,7 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
+  // Get travel recommendation based on user responses
   Future<void> _getTravelRecommendation() async {
     if (questions.isEmpty || widget.responsesList == null) return;
 
@@ -60,7 +65,7 @@ class _ResultScreenState extends State<ResultScreen> {
     });
 
     try {
-      // Verificar si ya existe una recomendación válida en widget.responseAi
+      // Check for existing recommendation
       Map<String, dynamic>? existingRecommendation;
       if (widget.responseAi is Map) {
         existingRecommendation = widget.responseAi;
@@ -75,18 +80,19 @@ class _ResultScreenState extends State<ResultScreen> {
       if (existingRecommendation != null &&
           existingRecommendation.containsKey('ciudad') &&
           existingRecommendation.containsKey('pais') &&
+          existingRecommendation.containsKey('iata') &&
           existingRecommendation.containsKey('descripcion') &&
           existingRecommendation.containsKey('itinerario')) {
-        // Usar la recomendación existente
         setState(() {
           travelRecommendation = existingRecommendation;
           isLoadingRecommendation = false;
         });
+        // Fetch flight price for existing recommendation
+        await _fetchCheapestFlightPrice(existingRecommendation['iata']);
         return;
       }
 
-      // Si no hay recomendación válida, proceder con la solicitud a Gemini AI
-      // Convertir responsesList a una lista
+      // Fetch new recommendation
       List<dynamic> responses = [];
       if (widget.responsesList is String) {
         responses = jsonDecode(widget.responsesList);
@@ -94,26 +100,27 @@ class _ResultScreenState extends State<ResultScreen> {
         responses = widget.responsesList;
       }
 
-      // Crear el string de preguntas y respuestas
       String questionsString = '';
       for (int i = 0; i < questions.length; i++) {
         if (i < responses.length && responses[i] != null) {
           final questionText = questions[i]['text'];
-          final response = responses[i] == 1 ? 'Sí' : 'No';
+          final response = responses[i] == 1
+              ? 'Yes'
+              : 'No'; // Translated 'Sí'/'No' to 'Yes'/'No'
           questionsString += '${i + 1}. $questionText: $response\n';
         }
       }
 
-      // Obtener la recomendación
       final recommendation = await getTravelRecommendation(questionsString);
-
-      // Guardar la recomendación en Supabase
       await _saveRecommendationToSupabase(recommendation);
 
       setState(() {
         travelRecommendation = recommendation;
         isLoadingRecommendation = false;
       });
+
+      // Fetch flight price for new recommendation
+      await _fetchCheapestFlightPrice(recommendation['iata']);
     } catch (e) {
       debugPrint('Error getting travel recommendation: $e');
       setState(() {
@@ -122,36 +129,139 @@ class _ResultScreenState extends State<ResultScreen> {
     }
   }
 
-  Future<void> _saveRecommendationToSupabase(
-      Map<String, dynamic> recommendation) async {
-    try {
-      // Actualizar el campo response_ai en la tabla rooms para la sala actual
-      await Supabase.instance.client
-          .from('rooms')
-          .update({'response_ai': recommendation}).eq('id', widget.roomId);
+  // Fetch the cheapest flight price from Skyscanner API
+  Future<void> _fetchCheapestFlightPrice(String destinationIata) async {
+    setState(() {
+      isLoadingFlightPrice = true;
+    });
 
-      debugPrint('Recomendación guardada en Supabase correctamente');
+    try {
+      const String originIata = 'BCN';
+      final String apiKey = 'sh967490139224896692439644109194';
+      final String baseUrl =
+          'https://partners.api.skyscanner.net/apiservices/v3/flights/indicative/search';
+
+      final url = Uri.parse(baseUrl);
+      final headers = {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      };
+
+      final payload = {
+        "query": {
+          "market": "ES",
+          "locale": "en-US", // Changed to en-US for English
+          "currency": "EUR",
+          "queryLegs": [
+            {
+              "originPlace": {
+                "queryPlace": {"iata": originIata}
+              },
+              "destinationPlace": {
+                "queryPlace": {"iata": destinationIata}
+              },
+              "anytime": true
+            }
+          ]
+        }
+      };
+
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        if (result['content'] != null &&
+            result['content']['results'] != null &&
+            result['content']['results']['quotes'] != null) {
+          final quotes = result['content']['results']['quotes'];
+          double? minPrice;
+          String? flightDate;
+
+          for (var quoteId in quotes.keys) {
+            final quote = quotes[quoteId];
+            if (quote['minPrice'] != null &&
+                quote['minPrice']['amount'] != null) {
+              final price = double.parse(quote['minPrice']['amount']);
+              final outboundLeg = quote['outboundLeg'];
+
+              if (minPrice == null || price < minPrice) {
+                minPrice = price;
+
+                if (outboundLeg != null &&
+                    outboundLeg['departureDateTime'] != null) {
+                  final dateTime = outboundLeg['departureDateTime'];
+                  flightDate =
+                      '${dateTime['day']}/${dateTime['month']}/${dateTime['year']}';
+                }
+              }
+            }
+          }
+
+          setState(() {
+            cheapestFlightPrice = minPrice;
+            if (flightDate != null) {
+              cheapestFlightDate = flightDate;
+            }
+            isLoadingFlightPrice = false;
+          });
+        } else {
+          setState(() {
+            cheapestFlightPrice = null;
+            cheapestFlightDate = null;
+            isLoadingFlightPrice = false;
+          });
+        }
+      } else {
+        debugPrint('Skyscanner API error: ${response.statusCode}');
+        setState(() {
+          cheapestFlightPrice = null;
+          cheapestFlightDate = null;
+          isLoadingFlightPrice = false;
+        });
+      }
     } catch (e) {
-      debugPrint('Error al guardar la recomendación en Supabase: $e');
+      debugPrint('Error fetching flight price: $e');
+      setState(() {
+        cheapestFlightPrice = null;
+        cheapestFlightDate = null;
+        isLoadingFlightPrice = false;
+      });
     }
   }
 
+  // Save recommendation to Supabase
+  Future<void> _saveRecommendationToSupabase(
+      Map<String, dynamic> recommendation) async {
+    try {
+      await Supabase.instance.client
+          .from('rooms')
+          .update({'response_ai': recommendation}).eq('id', widget.roomId);
+      debugPrint('Recommendation saved to Supabase successfully');
+    } catch (e) {
+      debugPrint('Error saving recommendation to Supabase: $e');
+    }
+  }
+
+  // Get travel recommendation from Google Generative AI
   Future<Map<String, dynamic>> getTravelRecommendation(
       String questionsString) async {
-    // Replace with your Gemini API key or use a secure method to load it
     final String apiKey = 'AIzaSyBlOgS6ZQgWLsJx2Fk-nORlJOYViaWCilo';
     final String baseUrl =
         'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-    // Create prompt using the provided questions string
     String prompt =
         'Based on the following travel preferences, recommend ONE SPECIFIC CITY (not a country) that fits these preferences:\n\n';
     prompt += questionsString;
     prompt +=
-        '\nReturn a JSON with exactly this format. Focus on a single specific city (not a country) and provide at least 5 activities or places to visit within that city in the itinerario array. Each place should have detailed descriptions:\n';
+        '\nReturn a JSON with exactly this format. Focus on a single specific city (not a country) and provide at least 5 activities or places to visit within that city in the itinerario array. Each place should have detailed descriptions. Include the IATA code for the city’s main airport:\n';
     prompt += '''{
       "ciudad": "City name",
       "pais": "Country name",
+      "iata": "IATA code of the city’s main airport (e.g., BCN for Barcelona, CDG for Paris)",
       "descripcion": "Description of the city and why it fits the preferences (at least 100 words)",
       "itinerario": [
         {
@@ -190,7 +300,6 @@ class _ResultScreenState extends State<ResultScreen> {
         final result = jsonDecode(response.body);
         if (result['candidates'] != null && result['candidates'].isNotEmpty) {
           String text = result['candidates'][0]['content']['parts'][0]['text'];
-          // Extract JSON from response
           final jsonStart = text.indexOf('{');
           final jsonEnd = text.lastIndexOf('}') + 1;
           if (jsonStart != -1 && jsonEnd != -1) {
@@ -212,7 +321,7 @@ class _ResultScreenState extends State<ResultScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF004D51),
       appBar: AppBar(
-        title: const Text('Resultado'),
+        title: const Text('Result'), // Translated 'Resultado' to 'Result'
         backgroundColor: const Color(0xFF1E6C71),
         elevation: 0,
       ),
@@ -226,7 +335,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sala: ${widget.roomId}',
+                      'Room: ${widget.roomId}', // Translated 'Sala' to 'Room'
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -251,7 +360,7 @@ class _ResultScreenState extends State<ResultScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Recomendación de viaje:',
+                            'Travel Recommendation:', // Translated 'Recomendación de viaje' to 'Travel Recommendation'
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -304,8 +413,79 @@ class _ResultScreenState extends State<ResultScreen> {
                                           ),
                                         ),
                                         const SizedBox(height: 20),
+                                        // Display cheapest flight price
+                                        isLoadingFlightPrice
+                                            ? const Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                        color:
+                                                            Color(0xFF1E6C71)))
+                                            : cheapestFlightPrice != null
+                                                ? Container(
+                                                    width: double.infinity,
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            10),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                      border: Border.all(
+                                                        color: const Color(
+                                                                0xFF1E6C71)
+                                                            .withOpacity(0.3),
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          'Recommended flight from Barcelona: €${cheapestFlightPrice!.toStringAsFixed(2)}', // Translated 'Vuelo recomendado desde Barcelona' to 'Recommended flight from Barcelona'
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Color(
+                                                                0xFF1E6C71),
+                                                          ),
+                                                        ),
+                                                        if (cheapestFlightDate !=
+                                                            null)
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    top: 5),
+                                                            child: Text(
+                                                              'Flight date: $cheapestFlightDate', // Translated 'Fecha del vuelo' to 'Flight date'
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 14,
+                                                                color: Color(
+                                                                    0xFF1E6C71),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  )
+                                                : const Text(
+                                                    'No flight prices found', // Translated 'No se encontraron precios de vuelos' to 'No flight prices found'
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontStyle:
+                                                          FontStyle.italic,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                        const SizedBox(height: 20),
                                         const Text(
-                                          'Itinerario sugerido:',
+                                          'Suggested Itinerary:', // Translated 'Itinerario sugerido' to 'Suggested Itinerary'
                                           style: TextStyle(
                                             fontSize: 20,
                                             color: Color(0xFF1E6C71),
@@ -492,7 +672,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                           )
                                         else
                                           const Text(
-                                            'No hay lugares disponibles en el itinerario',
+                                            'No places available in the itinerary', // Translated 'No hay lugares disponibles en el itinerario' to 'No places available in the itinerary'
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontStyle: FontStyle.italic,
@@ -502,7 +682,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                       ],
                                     )
                                   : const Text(
-                                      'No hay recomendación disponible',
+                                      'No recommendation available', // Translated 'No hay recomendación disponible' to 'No recommendation available'
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontStyle: FontStyle.italic,

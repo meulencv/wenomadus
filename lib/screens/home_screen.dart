@@ -1,11 +1,15 @@
+import 'dart:developer';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
+import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import 'create_room_screen.dart';
 import 'map_screen.dart';
-import 'room_detail_screen.dart'; // Asegúrate de importar la pantalla de detalles
-import '../utils/room_notifier.dart'; // Add this import
-import 'collection.dart'; // Importamos la pantalla de colección
+import 'room_detail_screen.dart';
+import '../utils/room_notifier.dart';
+import 'collection.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,8 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final _supabase = Supabase.instance.client;
   final _tribeCodeController = TextEditingController();
-
-  // Lista para almacenar las salas del usuario
   List<Map<String, dynamic>> _userRooms = [];
   bool _isLoading = true;
 
@@ -27,25 +29,20 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadUserRooms();
-
-    // Add listener for room updates
     RoomNotifier.roomsUpdated.addListener(_handleRoomsUpdated);
   }
 
   @override
   void dispose() {
     _tribeCodeController.dispose();
-    // Remove listener when widget is disposed
     RoomNotifier.roomsUpdated.removeListener(_handleRoomsUpdated);
     super.dispose();
   }
 
-  // Handler for room updates
   void _handleRoomsUpdated() {
     _loadUserRooms();
   }
 
-  // Cargar las salas del usuario
   Future<void> _loadUserRooms() async {
     setState(() {
       _isLoading = true;
@@ -54,13 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId != null) {
-        // Obtener todas las salas donde el usuario es miembro
         final response = await _supabase
             .from('room_users')
             .select('room_id')
             .eq('user_id', userId);
 
-        // Obtener detalles de cada sala
         if (response != null && response.isNotEmpty) {
           List<String> roomIds =
               List<String>.from(response.map((item) => item['room_id']));
@@ -69,23 +64,18 @@ class _HomeScreenState extends State<HomeScreen> {
               await _supabase.from('rooms').select('*').inFilter('id', roomIds);
 
           if (roomsResponse != null) {
-            // Para cada sala, obtenemos los usuarios
             List<Map<String, dynamic>> roomsWithUsers = [];
 
             for (var room in roomsResponse) {
-              // Obtener los usuarios de esta sala
               final usersResponse = await _supabase
                   .from('room_users')
                   .select('user_id')
                   .eq('room_id', room['id']);
 
-              // Obtener información de cada usuario
               List<Map<String, dynamic>> roomUsers = [];
               if (usersResponse != null && usersResponse.isNotEmpty) {
                 List<String> userIds = List<String>.from(
                     usersResponse.map((item) => item['user_id']));
-
-                // Agregamos la lista de IDs de usuario a la sala
                 room['user_ids'] = userIds;
                 room['user_count'] = userIds.length;
               } else {
@@ -116,13 +106,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Función para verificar si el usuario actual es administrador
   bool _isUserAdmin(String adminId) {
     final userId = _supabase.auth.currentUser?.id;
     return userId == adminId;
   }
 
-  // Función para generar un código único de 6 caracteres
   String _generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final random = Random();
@@ -134,7 +122,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Función para crear una nueva sala
   Future<void> _createRoom() async {
     try {
       final userId = _supabase.auth.currentUser?.id;
@@ -146,10 +133,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      // Generamos un código único para la sala
       final roomCode = _generateRoomCode();
 
-      // Insertamos la nueva sala en la tabla rooms
       await _supabase.from('rooms').insert({
         'id': roomCode,
         'admin_user_id': userId,
@@ -173,7 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Función para unirse a una sala mediante código
   Future<void> _joinRoom(String roomId) async {
     if (roomId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -204,7 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      // Check if the room exists
       final roomResponse = await _supabase
           .from('rooms')
           .select('id, name')
@@ -224,7 +207,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      // Check if the user is already a member of this room
       final memberResponse = await _supabase
           .from('room_users')
           .select()
@@ -245,7 +227,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      // Add the user to the room
       await _supabase.from('room_users').insert({
         'room_id': roomId,
         'user_id': userId,
@@ -258,10 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
 
-      // Clear the text field
       _tribeCodeController.clear();
-
-      // Reload user rooms
       await _loadUserRooms();
     } catch (e) {
       print('Error joining tribe: $e');
@@ -288,7 +266,6 @@ class _HomeScreenState extends State<HomeScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Título "Explore the beautiful places"
                 const Padding(
                   padding: EdgeInsets.fromLTRB(20, 20, 20, 15),
                   child: Text(
@@ -300,8 +277,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
-                // Barra de búsqueda
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
@@ -325,7 +300,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             onSubmitted: (value) => _joinRoom(value),
                           ),
                         ),
-                        // Botón para unirse
                         GestureDetector(
                           onTap: () =>
                               _joinRoom(_tribeCodeController.text.trim()),
@@ -335,15 +309,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Color(0xFF1E6C71)),
                           ),
                         ),
-                        // Ícono de QR con función interactiva
                         GestureDetector(
-                          onTap: () {
-                            // Aquí iría la función para abrir el escáner QR
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Abriendo escáner QR...')),
+                          onTap: () async {
+                            final scannedCode =
+                                await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const QRScanScreen(),
+                              ),
                             );
+                            if (scannedCode != null && scannedCode is String) {
+                              await _joinRoom(scannedCode);
+                            }
                           },
-                          child: Padding(
+                          child: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 15),
                             child:
                                 Icon(Icons.qr_code_scanner, color: Colors.grey),
@@ -353,8 +331,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
-                // Categorías con iconos
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   child: SizedBox(
@@ -362,20 +338,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildCategoryItem(
-                            Icons.add, true), // Botón 1: símbolo de +
-                        _buildCategoryItem(
-                            Icons.public, false), // Botón 2: mapa del mundo
-                        _buildCategoryItem(
-                            Icons.inventory_2, false), // Botón 3: baúl/cofre
-                        _buildCategoryItem(Icons.people_alt,
-                            false), // Botón 4: ícono de grupo/tribu
+                        _buildCategoryItem(Icons.add, true),
+                        _buildCategoryItem(Icons.public, false),
+                        _buildCategoryItem(Icons.inventory_2, false),
+                        _buildCategoryItem(Icons.people_alt, false),
                       ],
                     ),
                   ),
                 ),
-
-                // Título "My Tribes" directamente después de las categorías
                 const Padding(
                   padding: EdgeInsets.fromLTRB(20, 25, 20, 15),
                   child: Text(
@@ -387,8 +357,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
-                // Lista de mis tribus/grupos
                 _isLoading
                     ? const Expanded(
                         child: Center(
@@ -435,27 +403,30 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     confirmDismiss: (direction) async {
-                                      final isAdmin = _isUserAdmin(room['admin_user_id']);
-                                      
-                                      // Only admins can delete rooms
+                                      final isAdmin =
+                                          _isUserAdmin(room['admin_user_id']);
+
                                       if (!isAdmin) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           const SnackBar(
-                                            content: Text('Only admin can delete tribes'),
+                                            content: Text(
+                                                'Only admin can delete tribes'),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
                                         return false;
                                       }
-                                      
-                                      // Show confirmation dialog
+
                                       return await showDialog<bool>(
                                         context: context,
                                         builder: (BuildContext context) {
                                           return AlertDialog(
-                                            backgroundColor: const Color(0xFFE8F3F3),
+                                            backgroundColor:
+                                                const Color(0xFFE8F3F3),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(15),
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
                                             ),
                                             title: const Text(
                                               'Delete Tribe',
@@ -475,10 +446,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor: Colors.white,
                                                   shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
                                                   ),
                                                 ),
-                                                onPressed: () => Navigator.of(context).pop(false),
+                                                onPressed: () =>
+                                                    Navigator.of(context)
+                                                        .pop(false),
                                                 child: const Text(
                                                   'Cancel',
                                                   style: TextStyle(
@@ -491,10 +466,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor: Colors.red,
                                                   shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
                                                   ),
                                                 ),
-                                                onPressed: () => Navigator.of(context).pop(true),
+                                                onPressed: () =>
+                                                    Navigator.of(context)
+                                                        .pop(true),
                                                 child: const Text(
                                                   'Delete',
                                                   style: TextStyle(
@@ -509,35 +488,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                       );
                                     },
                                     onDismissed: (direction) async {
-                                      print('sala eliminada');
                                       try {
-                                        // First delete all room_users associations
                                         await _supabase
                                             .from('room_users')
                                             .delete()
                                             .eq('room_id', room['id']);
-                                            
-                                        // Then delete the room itself
                                         await _supabase
                                             .from('rooms')
                                             .delete()
                                             .eq('id', room['id']);
-                                            
-                                        // Remove from local list and update UI
                                         setState(() {
-                                          _userRooms.removeWhere((item) => item['id'] == room['id']);
+                                          _userRooms.removeWhere((item) =>
+                                              item['id'] == room['id']);
                                         });
-                                        
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
-                                            content: Text('Tribe deleted successfully'),
+                                            content: Text(
+                                                'Tribe deleted successfully'),
                                             backgroundColor: Colors.green,
                                           ),
                                         );
                                       } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           SnackBar(
-                                            content: Text('Error deleting tribe: $e'),
+                                            content: Text(
+                                                'Error deleting tribe: $e'),
                                             backgroundColor: Colors.red,
                                           ),
                                         );
@@ -545,7 +522,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     },
                                     child: GestureDetector(
                                       onTap: () {
-                                        // Navegar a la pantalla de detalles de la room
                                         Navigator.of(context).push(
                                           MaterialPageRoute(
                                             builder: (context) =>
@@ -565,23 +541,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                           padding: const EdgeInsets.all(15),
                                           child: Row(
                                             children: [
-                                              // Círculo para avatar/icono
                                               Container(
                                                 width: 50,
                                                 height: 50,
                                                 decoration: BoxDecoration(
-                                                  // Cambiar color a dorado si es admin
                                                   color: isAdmin
-                                                      ? const Color(
-                                                          0xFFFFD700) // Color dorado
-                                                      : const Color(
-                                                          0xFF1E6C71), // Color normal
+                                                      ? const Color(0xFFFFD700)
+                                                      : const Color(0xFF1E6C71),
                                                   shape: BoxShape.circle,
                                                 ),
                                                 child: Center(
                                                   child: Text(
-                                                    room['name']?[0] ??
-                                                        '?', // Primera letra del nombre
+                                                    room['name']?[0] ?? '?',
                                                     style: TextStyle(
                                                       color: isAdmin
                                                           ? const Color(
@@ -595,7 +566,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 ),
                                               ),
                                               const SizedBox(width: 15),
-                                              // Nombre de la tribu
                                               Expanded(
                                                 child: Column(
                                                   crossAxisAlignment:
@@ -650,7 +620,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   ],
                                                 ),
                                               ),
-                                              // Indicador de personas
                                               Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
@@ -694,16 +663,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                           ),
-
-                // Espacio expansible para llenar el resto de la pantalla
-                //const Expanded(child: SizedBox()),
               ],
             );
           },
         ),
       ),
-
-      // Barra de navegación inferior
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -745,11 +709,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.of(context)
               .push(MaterialPageRoute(builder: (context) => MapScreen()));
         } else if (icon == Icons.inventory_2) {
-          // Navegación a la pantalla de colección cuando se presiona el botón de caja
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (context) => CollectionScreen()));
-        } else {
-          // Manejar otros botones si es necesario
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => CollectionScreen()));
         }
       },
       child: Container(
@@ -765,5 +726,87 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+}
+
+class QRScanScreen extends StatefulWidget {
+  const QRScanScreen({Key? key}) : super(key: key);
+
+  @override
+  State<QRScanScreen> createState() => _QRScanScreenState();
+}
+
+class _QRScanScreenState extends State<QRScanScreen> {
+  Barcode? result;
+  QRViewController? controller;
+  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    if (Platform.isAndroid) {
+      controller?.pauseCamera();
+    }
+    controller?.resumeCamera();
+  }
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Scan Tribe QR Code'),
+        backgroundColor: const Color(0xFF004D51),
+      ),
+      body: _buildQrView(context),
+    );
+  }
+
+  Widget _buildQrView(BuildContext context) {
+    var scanArea = (MediaQuery.of(context).size.width < 400 ||
+            MediaQuery.of(context).size.height < 400)
+        ? 150.0
+        : 300.0;
+    return QRView(
+      key: qrKey,
+      onQRViewCreated: _onQRViewCreated,
+      overlay: QrScannerOverlayShape(
+        borderColor: const Color(0xFF1E6C71),
+        borderRadius: 10,
+        borderLength: 30,
+        borderWidth: 10,
+        cutOutSize: scanArea,
+      ),
+      onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
+    );
+  }
+
+  void _onQRViewCreated(QRViewController controller) {
+    setState(() {
+      this.controller = controller;
+    });
+    controller.scannedDataStream.listen((scanData) {
+      setState(() {
+        result = scanData;
+      });
+      if (scanData.code != null) {
+        controller.pauseCamera();
+        Navigator.of(context).pop(scanData.code);
+      }
+    });
+  }
+
+  void _onPermissionSet(BuildContext context, QRViewController ctrl, bool p) {
+//    log('${DateTime.now().toIso8601String()}_onPermissionSet $p');
+    if (!p) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera permission denied')),
+      );
+    }
   }
 }

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
+import '../utils/room_notifier.dart';
 
 class CreateRoomScreen extends StatefulWidget {
   const CreateRoomScreen({Key? key}) : super(key: key);
@@ -26,7 +27,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   void initState() {
     super.initState();
     _confettiController =
-        ConfettiController(duration: const Duration(seconds: 3));
+        ConfettiController(duration: const Duration(milliseconds: 500)); // Reduced from 3 to 1 second
   }
 
   @override
@@ -92,6 +93,9 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         _isCreating = false;
         _createdRoomCode = roomCode;
       });
+
+      // Notify that rooms have been updated
+      RoomNotifier.notifyRoomsUpdated();
 
       // Show confetti
       _confettiController.play();
@@ -436,8 +440,8 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
               particleDrag: 0.05,
-              emissionFrequency: 0.05,
-              numberOfParticles: 50,
+              emissionFrequency: 0.1, // Increased from 0.05 to 0.1 (less frequent)
+              numberOfParticles: 20, // Reduced from 50 to 20 particles
               gravity: 0.1,
               colors: const [
                 Colors.green,

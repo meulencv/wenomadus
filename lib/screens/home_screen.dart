@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
+import 'package:wenomadus/screens/nfc_screen_scan.dart';
 import 'create_room_screen.dart';
 import 'map_screen.dart';
 import 'room_detail_screen.dart';
@@ -341,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _buildCategoryItem(Icons.add, true),
                         _buildCategoryItem(Icons.public, false),
                         _buildCategoryItem(Icons.inventory_2, false),
-                        _buildCategoryItem(Icons.people_alt, false),
+                        _buildCategoryItem(Icons.nfc, false),
                       ],
                     ),
                   ),
@@ -711,6 +712,9 @@ class _HomeScreenState extends State<HomeScreen> {
         } else if (icon == Icons.inventory_2) {
           Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => CollectionScreen()));
+        } else if (icon == Icons.nfc) {
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => NFCScreenScan()));
         }
       },
       child: Container(

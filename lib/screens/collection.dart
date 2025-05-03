@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CollectionScreen extends StatefulWidget {
   const CollectionScreen({Key? key}) : super(key: key);
@@ -10,7 +11,8 @@ class CollectionScreen extends StatefulWidget {
 
 class _CollectionScreenState extends State<CollectionScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  final List<CountryItem> countries = [
+  final _supabase = Supabase.instance.client;
+  final List<CountryItem> allCountries = [
     CountryItem(name: 'Argentina', image: 'Argentina.jpeg'),
     CountryItem(name: 'Australia', image: 'Australia.jpeg'),
     CountryItem(name: 'Brazil', image: 'Brazil.jpeg'),
@@ -40,6 +42,10 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
     CountryItem(name: 'Vietnam', image: 'Vietnam.jpeg'),
   ];
 
+  List<CountryItem> userCountries = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
+
   final ScrollController _scrollController = ScrollController();
   bool _showTopShadow = false;
 
@@ -62,6 +68,61 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
         });
       }
     });
+
+    _loadUserCountries();
+  }
+
+  Future<void> _loadUserCountries() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        setState(() {
+          _errorMessage = 'Usuario no autenticado';
+          _isLoading = false;
+          userCountries = [];
+        });
+        return;
+      }
+
+      final response = await _supabase
+          .from('user_characters')
+          .select('characters')
+          .eq('user_id', userId)
+          .single();
+
+      if (response != null && response.containsKey('characters')) {
+        final List<dynamic> charactersList = response['characters'];
+
+        if (charactersList.isNotEmpty) {
+          final collectedCountryNames = charactersList
+              .map((item) => (item as String).toLowerCase())
+              .toSet();
+
+          userCountries = allCountries
+              .where((country) => collectedCountryNames.contains(country.name.toLowerCase()))
+              .toList();
+        } else {
+          userCountries = [];
+        }
+      } else {
+        userCountries = [];
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error al cargar los países: $e';
+        userCountries = [];
+      });
+      print('Error cargando países: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -211,10 +272,10 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              const Column(
+                              Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  const Text(
                                     "Collected",
                                     style: TextStyle(
                                       color: Colors.white70,
@@ -222,8 +283,8 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                                     ),
                                   ),
                                   Text(
-                                    "27/27",
-                                    style: TextStyle(
+                                    "${userCountries.length}/${allCountries.length}",
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -236,7 +297,7 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: userCountries.length == allCountries.length ? Colors.white : Colors.white.withOpacity(0.7),
                               borderRadius: BorderRadius.circular(15),
                               boxShadow: [
                                 BoxShadow(
@@ -250,11 +311,17 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                               children: [
                                 ShaderMask(
                                   shaderCallback: (bounds) => LinearGradient(
-                                    colors: [
-                                      const Color(0xFFFFD700),
-                                      const Color(0xFFF5DEB3),
-                                      const Color(0xFFFFD700),
-                                    ],
+                                    colors: userCountries.length == allCountries.length
+                                        ? [
+                                            const Color(0xFFFFD700),
+                                            const Color(0xFFF5DEB3),
+                                            const Color(0xFFFFD700),
+                                          ]
+                                        : [
+                                            Colors.grey.shade400,
+                                            Colors.grey.shade600,
+                                            Colors.grey.shade400,
+                                          ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ).createShader(bounds),
@@ -265,11 +332,12 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                                   ),
                                 ),
                                 const SizedBox(width: 5),
-                                const Text(
-                                  "Complete",
+                                Text(
+                                  userCountries.length == allCountries.length ? "Complete" : "In Progress",
                                   style: TextStyle(
-                                    color: Color(0xFF1E6C71),
+                                    color: const Color(0xFF1E6C71),
                                     fontWeight: FontWeight.bold,
+                                    fontSize: userCountries.length == allCountries.length ? 14 : 12,
                                   ),
                                 ),
                               ],
@@ -281,53 +349,142 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                   },
                 ),
                 Expanded(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (scrollNotification) {
-                      if (scrollNotification is ScrollUpdateNotification) {
-                        setState(() {
-                          _showTopShadow = _scrollController.offset > 20;
-                        });
-                      }
-                      return false;
-                    },
-                    child: Stack(
-                      children: [
-                        GridView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(12),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            childAspectRatio: 0.75,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
                           ),
-                          itemCount: countries.length,
-                          itemBuilder: (context, index) {
-                            return _buildAnimatedCountryCard(countries[index], index);
-                          },
-                        ),
-                        if (_showTopShadow)
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: 30,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    const Color(0xFF004D51).withOpacity(0.8),
-                                    const Color(0xFF004D51).withOpacity(0.0),
-                                  ],
-                                ),
+                        )
+                      : _errorMessage.isNotEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.white.withOpacity(0.7),
+                                    size: 48,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _errorMessage,
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ElevatedButton(
+                                    onPressed: _loadUserCountries,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                    ),
+                                    child: const Text(
+                                      "Reintentar",
+                                      style: TextStyle(
+                                        color: Color(0xFF1E6C71),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                            )
+                          : userCountries.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.card_travel,
+                                        color: Colors.white.withOpacity(0.7),
+                                        size: 64,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                                        child: Text(
+                                          "¡Aún no tienes países en tu colección! Viaja para desbloquearlos.",
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(0.9),
+                                            fontSize: 16,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                        ),
+                                        child: const Text(
+                                          "Volver al inicio",
+                                          style: TextStyle(
+                                            color: Color(0xFF1E6C71),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : NotificationListener<ScrollNotification>(
+                                  onNotification: (scrollNotification) {
+                                    if (scrollNotification is ScrollUpdateNotification) {
+                                      setState(() {
+                                        _showTopShadow = _scrollController.offset > 20;
+                                      });
+                                    }
+                                    return false;
+                                  },
+                                  child: Stack(
+                                    children: [
+                                      GridView.builder(
+                                        controller: _scrollController,
+                                        padding: const EdgeInsets.all(12),
+                                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 3,
+                                          childAspectRatio: 0.75,
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                        ),
+                                        itemCount: userCountries.length,
+                                        itemBuilder: (context, index) {
+                                          return _buildAnimatedCountryCard(userCountries[index], index);
+                                        },
+                                      ),
+                                      if (_showTopShadow)
+                                        Positioned(
+                                          top: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
+                                            height: 30,
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  const Color(0xFF004D51).withOpacity(0.8),
+                                                  const Color(0xFF004D51).withOpacity(0.0),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                 ),
               ],
             ),
@@ -398,8 +555,8 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                           return Center(
                             child: CircularProgressIndicator(
                               value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded / 
-                                    loadingProgress.expectedTotalBytes!
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
                                   : null,
                               color: const Color(0xFF1E6C71),
                             ),

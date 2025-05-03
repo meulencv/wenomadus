@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
+import '../utils/room_notifier.dart';
 
 class CreateRoomScreen extends StatefulWidget {
   const CreateRoomScreen({Key? key}) : super(key: key);
@@ -92,6 +93,9 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         _isCreating = false;
         _createdRoomCode = roomCode;
       });
+
+      // Notify that rooms have been updated
+      RoomNotifier.notifyRoomsUpdated();
 
       // Show confetti
       _confettiController.play();

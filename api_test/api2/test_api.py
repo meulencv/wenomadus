@@ -67,24 +67,30 @@ def test_search_flights(origin="MAD", destination="BCN", days_ahead=30, adults=2
     
     start_time_complete = time.time()
     
-    # Usar el token de sesión obtenido en la primera búsqueda
-    if "error" not in search_result and "session_token" in search_result:
+    try:
+        # Extraer el token cuidadosamente
+        token = None
+        if "error" not in search_result:
+            token = search_result.get("session_token")
+            if token and isinstance(token, str) and len(token) > 10:
+                print(f"Usando token existente: {token[:10]}...")
+            else:
+                print("Token existente no válido, realizando nueva búsqueda completa")
+                token = None
+        
+        # Realizar la búsqueda completa
         complete_results = client.complete_search(
             origin=origin,
             destination=destination,
             date=future_date,
             adults=adults,
             children_ages=children_ages,
-            session_token=search_result["session_token"]  # Reutilizar el token existente
+            session_token=token
         )
-    else:
-        complete_results = client.complete_search(
-            origin=origin,
-            destination=destination,
-            date=future_date,
-            adults=adults,
-            children_ages=children_ages
-        )
+        
+    except Exception as e:
+        print(f"ERROR INESPERADO: {str(e)}")
+        complete_results = {"error": f"Unexpected error: {str(e)}"}
     
     complete_response_time = time.time() - start_time_complete
     print(f"Tiempo de respuesta completa: {complete_response_time:.2f} segundos")

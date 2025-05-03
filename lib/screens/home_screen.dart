@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:math';
+import 'create_room_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -9,6 +12,58 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final _supabase = Supabase.instance.client;
+
+  // Función para generar un código único de 6 caracteres
+  String _generateRoomCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random();
+    return String.fromCharCodes(
+      Iterable.generate(
+        6,
+        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
+      ),
+    );
+  }
+
+  // Función para crear una nueva sala
+  Future<void> _createRoom() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Debes iniciar sesión para crear una sala')),
+        );
+        return;
+      }
+
+      // Generamos un código único para la sala
+      final roomCode = _generateRoomCode();
+
+      // Insertamos la nueva sala en la tabla rooms
+      await _supabase.from('rooms').insert({
+        'id': roomCode,
+        'admin_user_id': userId,
+        'responses_list': [],
+        'response_ai': {}
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Sala creada con éxito. Código: $roomCode'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al crear la sala: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -224,16 +279,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategoryItem(IconData icon, bool isSelected) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Icon(
-        icon,
-        color: isSelected ? const Color(0xFF004D51) : Colors.white,
+    return GestureDetector(
+      onTap: () {
+        if (icon == Icons.add) {
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => CreateRoomScreen()));
+        } else {
+          // Manejar otros botones si es necesario
+        }
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? const Color(0xFF004D51) : Colors.white,
+        ),
       ),
     );
   }

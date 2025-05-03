@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:countries_world_map/countries_world_map.dart';
-import 'package:countries_world_map/data/world_map.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -10,19 +10,80 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // Mapa de países seleccionados (código del país -> boolean)
-  final Map<String, bool> _selectedCountries = {};
+  // Controlador del mapa
+  final MapController _mapController = MapController();
   
-  // Color del mapa
-  final Color _defaultColor = Colors.grey.shade300;
-  final Color _selectedColor = Colors.amber;
-
+  // Lista de países visitados (códigos ISO)
+  final Set<String> _visitedCountries = {
+    'ESP', 'FRA', 'ITA', 'USA', 'MEX'
+  };
+  
+  // Mapa de información de países (nombre, coordenadas del centro)
+  final Map<String, Map<String, dynamic>> _countriesInfo = {
+    'ESP': {
+      'name': 'España',
+      'center': const LatLng(40.4168, -3.7038),
+      'color': Colors.amber,
+    },
+    'FRA': {
+      'name': 'Francia',
+      'center': const LatLng(46.2276, 2.2137),
+      'color': Colors.amber,
+    },
+    'ITA': {
+      'name': 'Italia',
+      'center': const LatLng(41.8719, 12.5675),
+      'color': Colors.amber,
+    },
+    'USA': {
+      'name': 'Estados Unidos',
+      'center': const LatLng(37.0902, -95.7129),
+      'color': Colors.amber,
+    },
+    'MEX': {
+      'name': 'México',
+      'center': const LatLng(23.6345, -102.5528),
+      'color': Colors.amber,
+    },
+    'DEU': {
+      'name': 'Alemania',
+      'center': const LatLng(51.1657, 10.4515),
+      'color': Colors.amber,
+    },
+    'GBR': {
+      'name': 'Reino Unido',
+      'center': const LatLng(55.3781, -3.4360),
+      'color': Colors.amber,
+    },
+    'JPN': {
+      'name': 'Japón',
+      'center': const LatLng(36.2048, 138.2529),
+      'color': Colors.amber,
+    },
+    'BRA': {
+      'name': 'Brasil',
+      'center': const LatLng(-14.235, -51.9253),
+      'color': Colors.amber,
+    },
+    'CAN': {
+      'name': 'Canadá',
+      'center': const LatLng(56.1304, -106.3468),
+      'color': Colors.amber,
+    },
+  };
+  
+  // Centro inicial del mapa (coordenadas aproximadas del centro del mundo)
+  final LatLng _initialCenter = const LatLng(20.0, 0.0);
+  
+  // Zoom inicial
+  final double _initialZoom = 2.0;
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF004D51),
       appBar: AppBar(
-        title: const Text('Mapa Interactivo'),
+        title: const Text('Países Visitados'),
         backgroundColor: const Color(0xFF004D51),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -33,7 +94,7 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Mapa Interactivo Mundial',
+              'Mapa de Países Visitados',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -42,7 +103,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Toca un país para seleccionarlo',
+              'Toca en un país para marcarlo como visitado',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 14,
@@ -50,60 +111,35 @@ class _MapScreenState extends State<MapScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: InteractiveViewer(
-                boundaryMargin: const EdgeInsets.all(20.0),
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: SizedBox(
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: WorldMap(
-                    // Configuración del mapa mundial
-                    styleOptions: MapStyleOptions(
-                      defaultColor: _defaultColor,
-                      defaultBorderColor: const Color(0xFF004D51),
-                      defaultBorderStrokeWidth: 1.0,
-                    ),
-                    // Detectar toques en países
-                    onCountryTap: (context, countryCode) {
-                      setState(() {
-                        // Alternar la selección del país
-                        if (_selectedCountries.containsKey(countryCode)) {
-                          _selectedCountries.remove(countryCode);
-                        } else {
-                          _selectedCountries[countryCode] = true;
-                        }
-                      });
-                      
-                      // Mostrar información sobre el país seleccionado
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            _selectedCountries.containsKey(countryCode)
-                                ? 'País $countryCode seleccionado'
-                                : 'País $countryCode deseleccionado',
-                          ),
-                          duration: const Duration(seconds: 1),
-                          backgroundColor: const Color(0xFF004D51),
-                        ),
-                      );
-                    },
-                    // Color personalizado para países seleccionados
-                    countryColors: Map.fromEntries(
-                      _selectedCountries.keys.map(
-                        (code) => MapEntry(code, _selectedColor),
-                      ),
-                    ),
-                    // Usar el mapa mundial
-                    map: worldMap,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    center: _initialCenter,
+                    zoom: _initialZoom,
+                    maxZoom: 18.0,
+                    minZoom: 1.0,
+                    onTap: _handleMapTap,
                   ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.wenomadus',
+                      subdomains: const ['a', 'b', 'c'],
+                    ),
+                    // Capa de marcadores para países visitados
+                    MarkerLayer(
+                      markers: _getCountryMarkers(),
+                    ),
+                  ],
                 ),
               ),
             ),
-            if (_selectedCountries.isNotEmpty) ...[
+            if (_visitedCountries.isNotEmpty) ...[
               const SizedBox(height: 20),
               Text(
-                'Países Seleccionados: ${_selectedCountries.length}',
+                'Países Visitados: ${_visitedCountries.length}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -112,23 +148,161 @@ class _MapScreenState extends State<MapScreen> {
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
-                children: _selectedCountries.keys
-                    .map((countryCode) => Chip(
-                          label: Text(countryCode),
+                children: _visitedCountries
+                    .where((code) => _countriesInfo.containsKey(code))
+                    .map((code) => Chip(
+                          label: Text(_countriesInfo[code]!['name'] as String),
                           backgroundColor: Colors.amber,
                           labelStyle: const TextStyle(color: Colors.black),
                           onDeleted: () {
                             setState(() {
-                              _selectedCountries.remove(countryCode);
+                              _visitedCountries.remove(code);
                             });
                           },
                         ))
                     .toList(),
               ),
             ],
+            // Agregar botón para simular búsqueda de países
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _showCountrySelector,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+              ),
+              child: const Text('Añadir País Visitado'),
+            ),
           ],
         ),
       ),
+    );
+  }
+  
+  // Generar marcadores para representar países visitados
+  List<Marker> _getCountryMarkers() {
+    final List<Marker> markers = [];
+    
+    for (final countryCode in _visitedCountries) {
+      if (_countriesInfo.containsKey(countryCode)) {
+        final countryData = _countriesInfo[countryCode]!;
+        final center = countryData['center'] as LatLng;
+        final name = countryData['name'] as String;
+        
+        markers.add(
+          Marker(
+            point: center,
+            width: 60,
+            height: 60,
+            builder: (ctx) => GestureDetector(
+              onTap: () {
+                // Mostrar información del país
+                _showCountryInfo(countryCode);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.6),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.black, width: 1),
+                ),
+                child: Tooltip(
+                  message: name,
+                  child: const Icon(Icons.flag, color: Colors.black),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+    
+    return markers;
+  }
+  
+  // Mostrar información del país
+  void _showCountryInfo(String countryCode) {
+    if (_countriesInfo.containsKey(countryCode)) {
+      final countryData = _countriesInfo[countryCode]!;
+      final name = countryData['name'] as String;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('País visitado: $name'),
+          action: SnackBarAction(
+            label: 'Eliminar',
+            onPressed: () {
+              setState(() {
+                _visitedCountries.remove(countryCode);
+              });
+            },
+          ),
+          duration: const Duration(seconds: 2),
+          backgroundColor: const Color(0xFF004D51),
+        ),
+      );
+    }
+  }
+  
+  // Manejar toques en el mapa
+  void _handleMapTap(TapPosition tapPosition, LatLng latLng) {
+    // Aquí podríamos implementar una búsqueda basada en coordenadas
+    // para detectar en qué país se ha tocado, pero eso requeriría
+    // una base de datos de polígonos de países que está fuera del alcance
+    
+    // En su lugar, mostraremos el selector de países
+    _showCountrySelector();
+  }
+  
+  // Mostrar un selector de países
+  void _showCountrySelector() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF004D51),
+          title: const Text(
+            'Seleccionar País Visitado',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: _countriesInfo.entries
+                  .map(
+                    (entry) => ListTile(
+                      title: Text(
+                        entry.value['name'] as String,
+                        style: TextStyle(
+                          color: _visitedCountries.contains(entry.key) ? Colors.amber : Colors.white,
+                        ),
+                      ),
+                      leading: Icon(
+                        _visitedCountries.contains(entry.key) ? Icons.check_circle : Icons.circle_outlined,
+                        color: _visitedCountries.contains(entry.key) ? Colors.amber : Colors.white,
+                      ),
+                      onTap: () {
+                        setState(() {
+                          if (_visitedCountries.contains(entry.key)) {
+                            _visitedCountries.remove(entry.key);
+                          } else {
+                            _visitedCountries.add(entry.key);
+                          }
+                        });
+                      },
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar', style: TextStyle(color: Colors.amber)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

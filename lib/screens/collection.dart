@@ -42,7 +42,7 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
     CountryItem(name: 'Vietnam', image: 'Vietnam.jpeg'),
   ];
 
-  List<CountryItem> userCountries = [];
+  Set<String> collectedCountryNames = {};
   bool _isLoading = true;
   String _errorMessage = '';
 
@@ -76,48 +76,48 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
     setState(() {
       _isLoading = true;
       _errorMessage = '';
+      collectedCountryNames = {};
     });
 
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
         setState(() {
-          _errorMessage = 'Usuario no autenticado';
+          _errorMessage = 'User not authenticated';
           _isLoading = false;
-          userCountries = [];
         });
         return;
       }
 
-      final response = await _supabase
-          .from('user_characters')
-          .select('characters')
-          .eq('user_id', userId)
-          .single();
+      try {
+        final response = await _supabase
+            .from('user_characters')
+            .select('characters')
+            .eq('user_id', userId)
+            .maybeSingle();
 
-      if (response != null && response.containsKey('characters')) {
-        final List<dynamic> charactersList = response['characters'];
+        if (response != null && response.containsKey('characters')) {
+          final List<dynamic> charactersList = response['characters'];
 
-        if (charactersList.isNotEmpty) {
-          final collectedCountryNames = charactersList
-              .map((item) => (item as String).toLowerCase())
-              .toSet();
-
-          userCountries = allCountries
-              .where((country) => collectedCountryNames.contains(country.name.toLowerCase()))
-              .toList();
-        } else {
-          userCountries = [];
+          if (charactersList.isNotEmpty) {
+            collectedCountryNames = charactersList
+                .map((item) => (item as String).toLowerCase())
+                .toSet();
+          }
         }
-      } else {
-        userCountries = [];
+      } catch (e) {
+        print('Error in query: $e');
+        if (!e.toString().contains('no rows returned') && !e.toString().contains('not found')) {
+          setState(() {
+            _errorMessage = 'Error loading countries: $e';
+          });
+        }
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error al cargar los países: $e';
-        userCountries = [];
+        _errorMessage = 'Error loading countries: $e';
       });
-      print('Error cargando países: $e');
+      print('Error loading countries: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -283,7 +283,7 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                                     ),
                                   ),
                                   Text(
-                                    "${userCountries.length}/${allCountries.length}",
+                                    "${collectedCountryNames.length}/${allCountries.length}",
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
@@ -297,7 +297,7 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: userCountries.length == allCountries.length ? Colors.white : Colors.white.withOpacity(0.7),
+                              color: collectedCountryNames.length == allCountries.length ? Colors.white : Colors.white.withOpacity(0.7),
                               borderRadius: BorderRadius.circular(15),
                               boxShadow: [
                                 BoxShadow(
@@ -311,7 +311,7 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                               children: [
                                 ShaderMask(
                                   shaderCallback: (bounds) => LinearGradient(
-                                    colors: userCountries.length == allCountries.length
+                                    colors: collectedCountryNames.length == allCountries.length
                                         ? [
                                             const Color(0xFFFFD700),
                                             const Color(0xFFF5DEB3),
@@ -333,11 +333,11 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                                 ),
                                 const SizedBox(width: 5),
                                 Text(
-                                  userCountries.length == allCountries.length ? "Complete" : "In Progress",
+                                  collectedCountryNames.length == allCountries.length ? "Complete" : "In Progress",
                                   style: TextStyle(
                                     color: const Color(0xFF1E6C71),
                                     fontWeight: FontWeight.bold,
-                                    fontSize: userCountries.length == allCountries.length ? 14 : 12,
+                                    fontSize: collectedCountryNames.length == allCountries.length ? 14 : 12,
                                   ),
                                 ),
                               ],
@@ -385,7 +385,7 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                     ),
                                     child: const Text(
-                                      "Reintentar",
+                                      "Retry",
                                       style: TextStyle(
                                         color: Color(0xFF1E6C71),
                                         fontWeight: FontWeight.bold,
@@ -395,96 +395,55 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                                 ],
                               ),
                             )
-                          : userCountries.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.card_travel,
-                                        color: Colors.white.withOpacity(0.7),
-                                        size: 64,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                                        child: Text(
-                                          "¡Aún no tienes países en tu colección! Viaja para desbloquearlos.",
-                                          style: TextStyle(
-                                            color: Colors.white.withOpacity(0.9),
-                                            fontSize: 16,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 24),
-                                      ElevatedButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                        ),
-                                        child: const Text(
-                                          "Volver al inicio",
-                                          style: TextStyle(
-                                            color: Color(0xFF1E6C71),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                          : NotificationListener<ScrollNotification>(
+                              onNotification: (scrollNotification) {
+                                if (scrollNotification is ScrollUpdateNotification) {
+                                  setState(() {
+                                    _showTopShadow = _scrollController.offset > 20;
+                                  });
+                                }
+                                return false;
+                              },
+                              child: Stack(
+                                children: [
+                                  GridView.builder(
+                                    controller: _scrollController,
+                                    padding: const EdgeInsets.all(12),
+                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 3,
+                                      childAspectRatio: 0.75,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                    ),
+                                    itemCount: allCountries.length,
+                                    itemBuilder: (context, index) {
+                                      final country = allCountries[index];
+                                      final isCollected = collectedCountryNames.contains(country.name.toLowerCase());
+                                      return _buildAnimatedCountryCard(country, index, isCollected);
+                                    },
                                   ),
-                                )
-                              : NotificationListener<ScrollNotification>(
-                                  onNotification: (scrollNotification) {
-                                    if (scrollNotification is ScrollUpdateNotification) {
-                                      setState(() {
-                                        _showTopShadow = _scrollController.offset > 20;
-                                      });
-                                    }
-                                    return false;
-                                  },
-                                  child: Stack(
-                                    children: [
-                                      GridView.builder(
-                                        controller: _scrollController,
-                                        padding: const EdgeInsets.all(12),
-                                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 3,
-                                          childAspectRatio: 0.75,
-                                          crossAxisSpacing: 10,
-                                          mainAxisSpacing: 10,
-                                        ),
-                                        itemCount: userCountries.length,
-                                        itemBuilder: (context, index) {
-                                          return _buildAnimatedCountryCard(userCountries[index], index);
-                                        },
-                                      ),
-                                      if (_showTopShadow)
-                                        Positioned(
-                                          top: 0,
-                                          left: 0,
-                                          right: 0,
-                                          child: Container(
-                                            height: 30,
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                begin: Alignment.topCenter,
-                                                end: Alignment.bottomCenter,
-                                                colors: [
-                                                  const Color(0xFF004D51).withOpacity(0.8),
-                                                  const Color(0xFF004D51).withOpacity(0.0),
-                                                ],
-                                              ),
-                                            ),
+                                  if (_showTopShadow)
+                                    Positioned(
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              const Color(0xFF004D51).withOpacity(0.8),
+                                              const Color(0xFF004D51).withOpacity(0.0),
+                                            ],
                                           ),
                                         ),
-                                    ],
-                                  ),
-                                ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                 ),
               ],
             ),
@@ -494,7 +453,7 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
     );
   }
 
-  Widget _buildAnimatedCountryCard(CountryItem country, int index) {
+  Widget _buildAnimatedCountryCard(CountryItem country, int index, bool isCollected) {
     return TweenAnimationBuilder(
       duration: Duration(milliseconds: 500 + (index * 50)),
       tween: Tween<double>(begin: 0.0, end: 1.0),
@@ -509,120 +468,193 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
       },
       child: GestureDetector(
         onTap: () {
-          _showCountryDetail(country);
+          _showCountryDetail(country, isCollected);
         },
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                const Color(0xFFE8F3F3),
-                const Color(0xFFE8F3F3).withOpacity(0.95),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                spreadRadius: 1,
-                blurRadius: 6,
-                offset: const Offset(0, 3),
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isCollected
+                      ? [
+                          const Color(0xFFE8F3F3),
+                          const Color(0xFFE8F3F3).withOpacity(0.95),
+                        ]
+                      : [
+                          Colors.grey.shade200,
+                          Colors.grey.shade300,
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    spreadRadius: 1,
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+                border: Border.all(
+                  color: isCollected
+                      ? Colors.white.withOpacity(0.5)
+                      : Colors.grey.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
-            ],
-            border: Border.all(
-              color: Colors.white.withOpacity(0.5),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(15),
-                        topRight: Radius.circular(15),
-                      ),
-                      child: Image.network(
-                        'https://www.wenomad.us/NFT/Countries/${country.image}',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              color: const Color(0xFF1E6C71),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(15),
+                            topRight: Radius.circular(15),
+                          ),
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.matrix(
+                              isCollected
+                                  ? [
+                                      1, 0, 0, 0, 0,
+                                      0, 1, 0, 0, 0,
+                                      0, 0, 1, 0, 0,
+                                      0, 0, 0, 1, 0,
+                                    ]
+                                  : [
+                                      0.5, 0, 0, 0, 0,
+                                      0, 0.5, 0, 0, 0,
+                                      0, 0, 0.5, 0, 0,
+                                      0, 0, 0, 1, 0,
+                                    ],
                             ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(
-                              Icons.error_outline,
-                              color: Color(0xFF1E6C71),
-                              size: 30,
+                            child: Image.network(
+                              'https://www.wenomad.us/NFT/Countries/${country.image}',
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                        : null,
+                                    color: const Color(0xFF1E6C71),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return const Center(
+                                  child: Icon(
+                                    Icons.error_outline,
+                                    color: Color(0xFF1E6C71),
+                                    size: 30,
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                    Positioned(
-                      top: -20,
-                      right: -20,
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.6),
-                              Colors.white.withOpacity(0.0),
-                            ],
                           ),
                         ),
+                        if (isCollected)
+                          Positioned(
+                            top: -20,
+                            right: -20,
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    Colors.white.withOpacity(0.8),
+                                    Colors.white.withOpacity(0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (!isCollected)
+                          Positioned.fill(
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.6),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.lock,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isCollected
+                          ? const Color(0xFF1E6C71).withOpacity(0.8)
+                          : Colors.grey.withOpacity(0.8),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(15),
+                        bottomRight: Radius.circular(15),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E6C71).withOpacity(0.8),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(15),
-                    bottomRight: Radius.circular(15),
+                    child: Text(
+                      country.name,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                child: Text(
-                  country.name,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
+                ],
+              ),
+            ),
+            if (isCollected)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        spreadRadius: 1,
+                        blurRadius: 3,
+                      ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF1E6C71),
+                    size: 24,
+                  ),
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 
-  void _showCountryDetail(CountryItem country) {
+  void _showCountryDetail(CountryItem country, bool isCollected) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -686,13 +718,88 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: Image.network(
-                            'https://www.wenomad.us/NFT/Countries/${country.image}',
-                            fit: BoxFit.cover,
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.matrix(
+                              isCollected
+                                  ? [
+                                      1, 0, 0, 0, 0,
+                                      0, 1, 0, 0, 0,
+                                      0, 0, 1, 0, 0,
+                                      0, 0, 0, 1, 0,
+                                    ]
+                                  : [
+                                      0.5, 0, 0, 0, 0,
+                                      0, 0.5, 0, 0, 0,
+                                      0, 0, 0.5, 0, 0,
+                                      0, 0, 0, 1, 0,
+                                    ],
+                            ),
+                            child: Image.network(
+                              'https://www.wenomad.us/NFT/Countries/${country.image}',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
                     ),
+                    if (!isCollected)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.orange, width: 1),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.lock_outline,
+                              color: Colors.orange,
+                              size: 16,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              "Not Collected Yet",
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (isCollected)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.green, width: 1),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              color: Colors.green,
+                              size: 16,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              "Collected",
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
@@ -704,13 +811,15 @@ class _CollectionScreenState extends State<CollectionScreen> with SingleTickerPr
                         ),
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.all(20),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
                       child: Text(
-                        "This NFT country card is part of your global collection. Travel to this country to unlock special rewards and experiences!",
+                        isCollected
+                            ? "Congratulations! You have collected the ${country.name} NFT card for your global collection. This exclusive collectible unlocks special rewards and experiences!"
+                            : "Travel to ${country.name} to unlock this NFT country card for your global collection. Once collected, you'll gain access to special rewards and experiences!",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Color(0xFF1E6C71),
+                          color: const Color(0xFF1E6C71),
                           fontSize: 16,
                         ),
                       ),

@@ -73,7 +73,8 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       // Generate a unique code for the room
       final roomCode = _generateRoomCode();
 
-      // Insert the new room into the rooms table
+      // Start a transaction by using Supabase client
+      // First, insert the new room
       await _supabase.from('rooms').insert({
         'id': roomCode,
         'name': _nameController.text.trim(),
@@ -81,6 +82,11 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         'responses_list': [],
         'response_ai': {}
       });
+
+      // Then, insert the relationship between user and room in room_users table
+      await _supabase
+          .from('room_users')
+          .insert({'room_id': roomCode, 'user_id': userId});
 
       setState(() {
         _isCreating = false;

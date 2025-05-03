@@ -14,6 +14,93 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final _supabase = Supabase.instance.client;
 
+  // Lista para almacenar las salas del usuario
+  List<Map<String, dynamic>> _userRooms = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserRooms();
+  }
+
+  // Cargar las salas del usuario
+  Future<void> _loadUserRooms() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId != null) {
+        // Obtener todas las salas donde el usuario es miembro
+        final response = await _supabase
+            .from('room_users')
+            .select('room_id')
+            .eq('user_id', userId);
+
+        // Obtener detalles de cada sala
+        if (response != null && response.isNotEmpty) {
+          List<String> roomIds =
+              List<String>.from(response.map((item) => item['room_id']));
+
+          final roomsResponse =
+              await _supabase.from('rooms').select('*').inFilter('id', roomIds);
+
+          if (roomsResponse != null) {
+            // Para cada sala, obtenemos los usuarios
+            List<Map<String, dynamic>> roomsWithUsers = [];
+
+            for (var room in roomsResponse) {
+              // Obtener los usuarios de esta sala
+              final usersResponse = await _supabase
+                  .from('room_users')
+                  .select('user_id')
+                  .eq('room_id', room['id']);
+
+              // Obtener información de cada usuario
+              List<Map<String, dynamic>> roomUsers = [];
+              if (usersResponse != null && usersResponse.isNotEmpty) {
+                List<String> userIds = List<String>.from(
+                    usersResponse.map((item) => item['user_id']));
+
+                // Agregamos la lista de IDs de usuario a la sala
+                room['user_ids'] = userIds;
+                room['user_count'] = userIds.length;
+              } else {
+                room['user_ids'] = [];
+                room['user_count'] = 0;
+              }
+
+              roomsWithUsers.add(room);
+            }
+
+            setState(() {
+              _userRooms = roomsWithUsers;
+              _isLoading = false;
+            });
+          }
+        } else {
+          setState(() {
+            _userRooms = [];
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading rooms: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Función para verificar si el usuario actual es administrador
+  bool _isUserAdmin(String adminId) {
+    final userId = _supabase.auth.currentUser?.id;
+    return userId == adminId;
+  }
+
   // Función para generar un código único de 6 caracteres
   String _generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -160,85 +247,156 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             // Lista de mis tribus/grupos
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: 5, // Número de tribus
-                itemBuilder: (context, index) {
-                  // Nombres de ejemplo para las tribus
-                  final tribeNames = [
-                    "Hackathon Team",
-                    "UPC Amigos",
-                    "Gaming Squad",
-                    "Study Group",
-                    "Weekend Trip"
-                  ];
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 15),
-                    child: Container(
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8F3F3),
-                        borderRadius: BorderRadius.circular(15),
+            _isLoading
+                ? const Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(15),
-                        child: Row(
-                          children: [
-                            // Círculo para avatar/icono
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Color(0xFF1E6C71),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  tribeNames[index]
-                                      [0], // Primera letra del nombre
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
+                    ),
+                  )
+                : _userRooms.isEmpty
+                    ? const Expanded(
+                        child: Center(
+                          child: Text(
+                            "You don't have any tribes yet.\nCreate one or join an existing tribe!",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      )
+                    : Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: _userRooms.length,
+                          itemBuilder: (context, index) {
+                            final room = _userRooms[index];
+                            final isAdmin = _isUserAdmin(room['admin_user_id']);
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 15),
+                              child: Container(
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE8F3F3),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(15),
+                                  child: Row(
+                                    children: [
+                                      // Círculo para avatar/icono
+                                      Container(
+                                        width: 50,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          // Cambiar color a dorado si es admin
+                                          color: isAdmin
+                                              ? const Color(
+                                                  0xFFFFD700) // Color dorado
+                                              : const Color(
+                                                  0xFF1E6C71), // Color normal
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            room['name']?[0] ??
+                                                '?', // Primera letra del nombre
+                                            style: TextStyle(
+                                              color: isAdmin
+                                                  ? const Color(0xFF004D51)
+                                                  : Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 15),
+                                      // Nombre de la tribu
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              room['name'] ?? 'Unknown Room',
+                                              style: const TextStyle(
+                                                color: Color(0xFF004D51),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  'Code: ${room['id']}',
+                                                  style: const TextStyle(
+                                                    color: Colors.grey,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                if (isAdmin) ...[
+                                                  const SizedBox(width: 8),
+                                                  const Icon(
+                                                    Icons.star,
+                                                    color: Color(0xFFFFD700),
+                                                    size: 16,
+                                                  ),
+                                                  const Text(
+                                                    "Admin",
+                                                    style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ]
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      // Indicador de personas
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF1E6C71),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.people,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${room['user_count'] ?? 0}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 15),
-                            // Nombre de la tribu
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    tribeNames[index],
-                                    style: TextStyle(
-                                      color: const Color(0xFF004D51),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Text(
-                                    "${index + 3} members",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
 
             // Espacio expansible para llenar el resto de la pantalla
             //const Expanded(child: SizedBox()),

@@ -1,15 +1,16 @@
 from config import API_KEY
 import requests
 import json
+from datetime import datetime, timedelta
+import time
 
-# Base URL for Skyscanner API v3
-SKYSCANNER_API_BASE_URL = "https://partners.api.skyscanner.net/apiservices/v3"
+# Base URL for Skyscanner API
+SKYSCANNER_API_BASE_URL = "https://partners.api.skyscanner.net/apiservices"
 
-# Headers for authentication
-headers = {
-    "x-api-key": API_KEY,
-    "Content-Type": "application/json"
-}
+def get_future_date(days_ahead=7):
+    """Get a future date in YYYY-MM-DD format"""
+    future_date = datetime.now() + timedelta(days=days_ahead)
+    return future_date.strftime("%Y-%m-%d")
 
 def make_request(endpoint, method="GET", data=None):
     """
@@ -25,34 +26,74 @@ def make_request(endpoint, method="GET", data=None):
     """
     url = f"{SKYSCANNER_API_BASE_URL}/{endpoint}"
     
-    if method == "GET":
-        response = requests.get(url, headers=headers)
-    elif method == "POST":
-        response = requests.post(url, headers=headers, json=data)
-    else:
-        raise ValueError(f"Unsupported HTTP method: {method}")
+    # Headers as specified in documentation
+    headers = {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json"
+    }
     
-    response.raise_for_status()  # Raise exception for bad status codes
-    return response.json()
+    print(f"\nMaking {method} request to: {url}")
+    
+    try:
+        if method == "GET":
+            response = requests.get(url, headers=headers)
+        elif method == "POST":
+            if data:
+                print(f"Request data summary: {json.dumps(data, indent=2)[:200]}...")
+            response = requests.post(url, headers=headers, json=data)
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
+        
+        print(f"Response status code: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"Error response: {response.text}")
+        
+        response.raise_for_status()  # Raise exception for bad status codes
+        return response.json()
+    
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response content: {e.response.text}")
+        raise e
+    except Exception as e:
+        print(f"Error: {e}")
+        raise e
 
 def get_culture_info():
-    """Get culture information including markets, currencies, and locales"""
-    return make_request("culture/markets-currencies-languages")
+    """
+    Get culture information - NOT CURRENTLY WORKING
+    This is kept for compatibility but will raise an exception
+    """
+    # NOTE: This endpoint doesn't seem to be accessible with the current API key
+    raise NotImplementedError("Culture information endpoint is not available with the current API key")
 
-def search_flights(origin, destination, date, return_date=None, adults=1):
+def search_flights(origin, destination, date=None, return_date=None, adults=1):
     """
     Search for flights using the Live Prices API
     
     Args:
         origin (str): Origin place IATA code (e.g., 'LHR')
         destination (str): Destination place IATA code (e.g., 'JFK')
-        date (str): Outbound date in YYYY-MM-DD format
+        date (str): Outbound date in YYYY-MM-DD format (defaults to 7 days from now)
         return_date (str, optional): Return date for round trips
         adults (int): Number of adult passengers
         
     Returns:
         dict: Flight search results and session token
     """
+    # Use provided date or default to 7 days in future
+    if date is None:
+        date = get_future_date(7)
+    
+    # Parse the date components
+    date_parts = date.split("-")
+    year = int(date_parts[0])
+    month = int(date_parts[1])
+    day = int(date_parts[2])
+        
+    # Create query with proper format
     query = {
         "query": {
             "market": "ES",
@@ -63,30 +104,47 @@ def search_flights(origin, destination, date, return_date=None, adults=1):
                     "originPlaceId": {"iata": origin},
                     "destinationPlaceId": {"iata": destination},
                     "date": {
-                        "year": int(date.split("-")[0]),
-                        "month": int(date.split("-")[1]),
-                        "day": int(date.split("-")[2])
+                        "year": year,
+                        "month": month,
+                        "day": day
                     }
                 }
             ],
             "adults": adults,
-            "childrenAges": []
+            "cabinClass": "CABIN_CLASS_ECONOMY",
+            "includeSustainabilityData": True
         }
     }
     
     # Add return leg if return_date is provided
     if return_date:
+        return_date_parts = return_date.split("-")
+        return_year = int(return_date_parts[0])
+        return_month = int(return_date_parts[1])
+        return_day = int(return_date_parts[2])
+        
         query["query"]["queryLegs"].append({
             "originPlaceId": {"iata": destination},
             "destinationPlaceId": {"iata": origin},
             "date": {
-                "year": int(return_date.split("-")[0]),
-                "month": int(return_date.split("-")[1]),
-                "day": int(return_date.split("-")[2])
+                "year": return_year,
+                "month": return_month,
+                "day": return_day
             }
         })
     
-    return make_request("flights/live/search/create", method="POST", data=query)
+    # Make the request
+    result = make_request("v3/flights/live/search/create", method="POST", data=query)
+    
+    # Extract the session token without the "-cells1" suffix which could be causing problems
+    if "sessionToken" in result:
+        original_token = result["sessionToken"]
+        if original_token.endswith("-cells1"):
+            # Store both tokens for reference
+            result["originalSessionToken"] = original_token
+            result["sessionToken"] = original_token.replace("-cells1", "")
+    
+    return result
 
 def poll_flight_results(session_token):
     """
@@ -98,20 +156,38 @@ def poll_flight_results(session_token):
     Returns:
         dict: Updated flight search results
     """
-    return make_request(f"flights/live/search/poll/{session_token}")
+    # Try both with and without the -cells1 suffix
+    original_token = session_token
+    
+    try:
+        # First try with the original token
+        return make_request(f"v3/flights/live/search/poll/{original_token}", method="POST")
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404 and not session_token.endswith("-cells1"):
+            # If 404 and no suffix, try adding the suffix
+            print("Retrying with -cells1 suffix...")
+            modified_token = f"{session_token}-cells1"
+            return make_request(f"v3/flights/live/search/poll/{modified_token}", method="POST")
+        else:
+            # If that also fails, or if the error wasn't a 404, re-raise
+            raise
 
-def get_indicative_prices(origin, destination, date):
+def get_indicative_prices(origin, destination, date=None):
     """
     Get indicative (average) flight prices between two locations
     
     Args:
         origin (str): Origin place IATA code (e.g., 'LHR')
         destination (str): Destination place IATA code (e.g., 'JFK')
-        date (str): Date in YYYY-MM-DD format
+        date (str): Date in YYYY-MM-DD format (defaults to 30 days from now)
         
     Returns:
         dict: Indicative price data
     """
+    # Use provided date or default to 30 days in future
+    if date is None:
+        date = get_future_date(30)
+        
     query = {
         "query": {
             "market": "ES",
@@ -132,38 +208,28 @@ def get_indicative_prices(origin, destination, date):
         }
     }
     
-    return make_request("flights/indicative/search", method="POST", data=query)
+    # Updated endpoint for indicative prices
+    return make_request("v3/flights/indicative/search", method="POST", data=query)
 
-# Usage examples
+# Example usage when script is run directly
 if __name__ == "__main__":
-    # Example 1: Get culture information
-    print("\n=== Culture Information ===")
-    culture_info = get_culture_info()
-    print(f"Available markets: {len(culture_info['markets'])}")
-    print(f"Available currencies: {len(culture_info['currencies'])}")
-    print(f"First market: {culture_info['markets'][0]}")
+    try:
+        print("Testing Skyscanner API with dynamic dates")
+        future_date = get_future_date(7)
+        print(f"Using future date: {future_date}")
+        
+        # Example flight search with future date
+        search_results = search_flights("MAD", "BCN", date=future_date)
+        print(f"Search status: {search_results.get('status')}")
+        
+        # If successful, get session token and poll for results
+        session_token = search_results.get("sessionToken")
+        if session_token:
+            print(f"Session token: {session_token}")
+            print("Polling for complete results...")
+            poll_results = poll_flight_results(session_token)
+            print(f"Updated status: {poll_results.get('status')}")
     
-    # Example 2: Search for flights
-    print("\n=== Flight Search Example ===")
-    print("Searching for flights from Madrid (MAD) to Barcelona (BCN)...")
-    search_results = search_flights("MAD", "BCN", "2023-12-01")
-    session_token = search_results.get("sessionToken")
-    
-    print(f"Search status: {search_results.get('status')}")
-    print(f"Session token: {session_token}")
-    
-    if search_results.get('status') == "RESULT_STATUS_INCOMPLETE" and session_token:
-        print("Polling for complete results...")
-        poll_results = poll_flight_results(session_token)
-        print(f"Updated status: {poll_results.get('status')}")
-    
-    # Example 3: Get indicative prices
-    print("\n=== Indicative Prices Example ===")
-    indicative_prices = get_indicative_prices("MAD", "BCN", "2023-12-01")
-    print(f"Status: {indicative_prices.get('status')}")
-    if indicative_prices.get('quotes'):
-        print(f"Number of quotes: {len(indicative_prices['quotes'])}")
-        if indicative_prices['quotes']:
-            first_quote = indicative_prices['quotes'][0]
-            print(f"First quote price: {first_quote.get('minPrice', {}).get('amount')} {first_quote.get('minPrice', {}).get('currency')}")
+    except Exception as e:
+        print(f"Error: {str(e)}")
 

@@ -1,9 +1,9 @@
 import json
+import time
 from api import (
-    get_culture_info, 
     search_flights, 
     poll_flight_results, 
-    get_indicative_prices
+    get_future_date
 )
 
 def pretty_print(data):
@@ -13,118 +13,193 @@ def pretty_print(data):
 def example_culture_api():
     """Example of using Culture API to get markets, currencies and locales"""
     print("\n===== CULTURE API EXAMPLE =====")
-    culture_data = get_culture_info()
-    
-    print("\n== Available Markets (first 5) ==")
-    for market in culture_data["markets"][:5]:
-        print(f"Code: {market['code']}, Name: {market['name']}")
-    
-    print("\n== Available Currencies (first 5) ==")
-    for currency in culture_data["currencies"][:5]:
-        print(f"Code: {currency['code']}, Symbol: {currency['symbol']}")
-    
-    print("\n== Available Locales (first 5) ==")
-    for locale in culture_data["locales"][:5]:
-        print(f"Code: {locale['code']}, Name: {locale['name']}")
+    print("Sorry, the Culture API is not accessible with the current API key.")
 
 def example_flight_search():
     """Example of using Flight Live Prices API for a one-way trip"""
     print("\n===== FLIGHT SEARCH EXAMPLE (ONE-WAY) =====")
     
+    # Use dynamic future dates
     origin = "MAD"      # Madrid
     destination = "BCN"  # Barcelona
-    date = "2023-12-10"
+    future_date = get_future_date(10)  # 10 days in the future
     adults = 2
     
-    print(f"Searching for flights from {origin} to {destination} on {date} for {adults} adults...")
+    print(f"Searching for flights from {origin} to {destination} on {future_date} for {adults} adults...")
     
-    # Initial search
-    search_results = search_flights(origin, destination, date, adults=adults)
-    session_token = search_results.get("sessionToken")
-    
-    print(f"Search status: {search_results.get('status')}")
-    
-    if search_results.get('status') == "RESULT_STATUS_INCOMPLETE" and session_token:
-        print("Initial results are incomplete. Polling for more results...")
+    try:
+        # Initial search with future date
+        search_results = search_flights(origin, destination, date=future_date, adults=adults)
+        session_token = search_results.get("sessionToken")
         
-        # Poll for complete results (you might need to poll multiple times)
-        poll_results = poll_flight_results(session_token)
-        print(f"Updated status: {poll_results.get('status')}")
+        print(f"Search status: {search_results.get('status')}")
+        print(f"Session token: {session_token}")
         
-        # Check if we have itineraries
-        if poll_results.get('content', {}).get('results', {}).get('itineraries'):
-            itineraries = poll_results['content']['results']['itineraries']
-            print(f"Found {len(itineraries)} itineraries")
+        if search_results.get('status') == "RESULT_STATUS_INCOMPLETE" and session_token:
+            print("Initial results are incomplete. Polling for more results...")
+            print("Waiting 2 seconds before polling...")
+            time.sleep(2)  # Add delay before polling
             
-            # Show first itinerary details
-            if itineraries:
-                first_itinerary = list(itineraries.values())[0]
-                price_info = first_itinerary.get('pricingOptions', [])[0]
-                price = price_info.get('price', {})
+            # Poll for complete results
+            try:
+                poll_results = poll_flight_results(session_token)
+                print(f"Updated status: {poll_results.get('status')}")
                 
-                print("\nExample itinerary:")
-                print(f"Price: {price.get('amount')} {price.get('currency')}")
-                print(f"Agent: {price_info.get('agentIds', [])[0]}")
+                # Process results here...
+                if poll_results.get('content', {}).get('results', {}).get('itineraries'):
+                    itineraries = poll_results['content']['results']['itineraries']
+                    print(f"Found {len(itineraries)} itineraries")
+                    
+                    # Display results...
+                    # ...existing code...
+            except Exception as e:
+                print(f"Error during polling: {e}")
+                # Try to use the results from the initial search
+                print("Using initial search results instead...")
+                if search_results.get('content', {}).get('results', {}).get('itineraries'):
+                    itineraries = search_results['content']['results']['itineraries']
+                    print(f"Found {len(itineraries)} itineraries in initial results")
+                    
+                    # Display first itinerary
+                    if itineraries:
+                        first_itinerary = list(itineraries.values())[0]
+                        price_options = first_itinerary.get('pricingOptions', [])
+                        if price_options:
+                            price_info = price_options[0]
+                            price = price_info.get('price', {})
+                            
+                            print("\nExample itinerary:")
+                            print(f"Price: {price.get('amount')} {price.get('currency')}")
+                            print(f"Agent: {price_info.get('agentIds', [])[0] if price_info.get('agentIds') else 'Unknown'}")
+    except Exception as e:
+        print(f"Error in flight search: {str(e)}")
 
-def example_round_trip_search():
-    """Example of using Flight Live Prices API for a round trip"""
-    print("\n===== FLIGHT SEARCH EXAMPLE (ROUND TRIP) =====")
+def find_cheapest_madrid_paris():
+    """Simple function to find the cheapest flight from Madrid to Paris"""
+    print("\n===== CHEAPEST FLIGHT: MADRID TO PARIS =====")
     
-    origin = "MAD"      # Madrid
-    destination = "LHR"  # London Heathrow
-    outbound_date = "2023-12-10"
-    return_date = "2023-12-17"
+    # Set up the search parameters
+    origin = "MAD"         # Madrid
+    destination = "CDG"     # Paris Charles de Gaulle
+    future_date = get_future_date(30)
     
-    print(f"Searching for flights from {origin} to {destination}")
-    print(f"Outbound: {outbound_date}, Return: {return_date}")
+    print(f"Searching for the cheapest flight from Madrid to Paris on {future_date}...")
     
-    # Perform search
-    search_results = search_flights(origin, destination, outbound_date, return_date=return_date)
-    session_token = search_results.get("sessionToken")
-    
-    print(f"Search status: {search_results.get('status')}")
-    
-    if session_token:
-        # Poll for complete results
-        poll_results = poll_flight_results(session_token)
-        print(f"Updated status: {poll_results.get('status')}")
+    try:
+        # Perform the search
+        search_results = search_flights(origin, destination, date=future_date)
         
-        # Display number of legs found
-        if poll_results.get('content', {}).get('results', {}).get('legs'):
-            legs = poll_results['content']['results']['legs']
-            print(f"Found {len(legs)} flight legs")
-
-def example_indicative_prices():
-    """Example of using Flight Indicative Prices API"""
-    print("\n===== INDICATIVE PRICES EXAMPLE =====")
-    
-    origin = "BCN"      # Barcelona
-    destination = "NYC"  # New York
-    date = "2023-12-15"
-    
-    print(f"Getting indicative prices from {origin} to {destination} on {date}...")
-    
-    price_data = get_indicative_prices(origin, destination, date)
-    print(f"Status: {price_data.get('status')}")
-    
-    quotes = price_data.get('quotes', [])
-    if quotes:
-        print(f"Found {len(quotes)} quotes")
+        # Extract itineraries
+        content = search_results.get('content', {})
+        results = content.get('results', {})
+        itineraries = results.get('itineraries', {})
         
-        # Show some example quotes
-        for i, quote in enumerate(quotes[:3]):  # Show first 3 quotes
-            min_price = quote.get('minPrice', {})
-            print(f"\nQuote {i+1}:")
-            print(f"Price: {min_price.get('amount')} {min_price.get('currency')}")
-            print(f"Direct: {'Yes' if quote.get('isDirect') else 'No'}")
-            print(f"Date: {quote.get('outboundDate')}")
+        if not itineraries:
+            print("No flights found.")
+            return
+            
+        # Get reference data
+        places = content.get('places', {})
+        carriers = content.get('carriers', {})
+        legs = results.get('legs', {})
+        
+        # Find the cheapest itinerary
+        cheapest_price = float('inf')
+        cheapest_itinerary = None
+        cheapest_currency = "EUR"  # Default currency
+        
+        for itin_id, itinerary in itineraries.items():
+            if not itinerary.get('pricingOptions'):
+                continue
+                
+            # Get price information
+            price_info = itinerary['pricingOptions'][0].get('price', {})
+            price_str = price_info.get('amount')
+            currency = price_info.get('currency', 'EUR')  # Get currency with default
+            
+            # Convert price to float for comparison
+            try:
+                price = float(price_str) if price_str is not None else None
+                if price is not None and price < cheapest_price:
+                    cheapest_price = price
+                    cheapest_itinerary = itinerary
+                    cheapest_currency = currency
+            except (ValueError, TypeError):
+                # Skip itineraries with invalid price values
+                continue
+        
+        if not cheapest_itinerary:
+            print("No valid price information found for any flights.")
+            return
+            
+        # Display the cheapest flight details - use the saved currency instead of accessing it from the itinerary
+        leg_id = cheapest_itinerary.get('legIds', [None])[0]  # Get the first leg safely
+        if not leg_id:
+            print(f"Price: {cheapest_price} {cheapest_currency}")
+            print("Incomplete flight information")
+            return
+            
+        leg = legs.get(leg_id, {})
+        
+        # Get airline information
+        segment_ids = leg.get('segmentIds', [])
+        airline = "Unknown"
+        if segment_ids:
+            segment = results.get('segments', {}).get(segment_ids[0], {})
+            carrier_id = segment.get('marketingCarrierId')
+            airline = carriers.get(carrier_id, {}).get('name', "Unknown")
+        
+        # Format the departure and arrival times
+        dep_time = leg.get('departureDateTime', {})
+        arr_time = leg.get('arrivalDateTime', {})
+        
+        # More safely format time strings
+        try:
+            dep_str = f"{dep_time.get('hour', 0):02d}:{dep_time.get('minute', 0):02d}, {dep_time.get('day', 0)}/{dep_time.get('month', 0)}" if dep_time else "Unknown"
+        except (TypeError, ValueError):
+            dep_str = "Unknown"
+            
+        try:
+            arr_str = f"{arr_time.get('hour', 0):02d}:{arr_time.get('minute', 0):02d}, {arr_time.get('day', 0)}/{arr_time.get('month', 0)}" if arr_time else "Unknown"
+        except (TypeError, ValueError):
+            arr_str = "Unknown"
+        
+        # Get duration
+        duration_mins = leg.get('durationInMinutes', 0)
+        hours = duration_mins // 60
+        mins = duration_mins % 60
+        
+        # Display the result in a simple format
+        print("\n💰 CHEAPEST FLIGHT FOUND 💰")
+        print(f"Price: {cheapest_price} {cheapest_currency}")
+        print(f"Airline: {airline}")
+        print(f"Departure: {dep_str}")
+        print(f"Arrival: {arr_str}")
+        print(f"Duration: {hours}h {mins}m")
+        print(f"Stops: {len(segment_ids) - 1}")
+        
+        # Show booking agent
+        price_options = cheapest_itinerary.get('pricingOptions', [])
+        if price_options:
+            agent_ids = price_options[0].get('agentIds', [])
+            if agent_ids:
+                agent = content.get('agents', {}).get(agent_ids[0], {}).get('name', agent_ids[0])
+                print(f"Book with: {agent}")
+                
+                # Show deep link if available
+                items = price_options[0].get('items', [])
+                if items and items[0].get('deepLink'):
+                    print(f"Booking link available: Yes")
+        
+    except Exception as e:
+        import traceback
+        print(f"Error finding cheapest flight: {e}")
+        print("Stack trace:")
+        traceback.print_exc()
 
 if __name__ == "__main__":
-    # Run examples
+    # Run only the simplified Madrid to Paris search
     try:
-        example_culture_api()
-        example_flight_search()
-        example_round_trip_search()
-        example_indicative_prices()
+        find_cheapest_madrid_paris()
     except Exception as e:
         print(f"Error: {e}")

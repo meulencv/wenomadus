@@ -27,7 +27,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   void initState() {
     super.initState();
     _confettiController =
-        ConfettiController(duration: const Duration(seconds: 3));
+        ConfettiController(duration: const Duration(milliseconds: 500)); // Reduced from 3 to 1 second
   }
 
   @override
@@ -440,8 +440,8 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
               particleDrag: 0.05,
-              emissionFrequency: 0.05,
-              numberOfParticles: 50,
+              emissionFrequency: 0.1, // Increased from 0.05 to 0.1 (less frequent)
+              numberOfParticles: 20, // Reduced from 50 to 20 particles
               gravity: 0.1,
               colors: const [
                 Colors.green,

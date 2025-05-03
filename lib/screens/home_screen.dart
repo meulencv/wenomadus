@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
 import 'create_room_screen.dart';
 import 'map_screen.dart';
+import 'room_detail_screen.dart'; // Asegúrate de importar la pantalla de detalles
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -398,128 +399,137 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 15),
-                              child: Container(
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE8F3F3),
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(15),
-                                  child: Row(
-                                    children: [
-                                      // Círculo para avatar/icono
-                                      Container(
-                                        width: 50,
-                                        height: 50,
-                                        decoration: BoxDecoration(
-                                          // Cambiar color a dorado si es admin
-                                          color: isAdmin
-                                              ? const Color(
-                                                  0xFFFFD700) // Color dorado
-                                              : const Color(
-                                                  0xFF1E6C71), // Color normal
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            room['name']?[0] ??
-                                                '?', // Primera letra del nombre
-                                            style: TextStyle(
-                                              color: isAdmin
-                                                  ? const Color(0xFF004D51)
-                                                  : Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20,
+                              child: GestureDetector(
+                                onTap: () {
+                                  // Navegar a la pantalla de detalles de la room
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => RoomDetailScreen(roomId: room['id']),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFE8F3F3),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(15),
+                                    child: Row(
+                                      children: [
+                                        // Círculo para avatar/icono
+                                        Container(
+                                          width: 50,
+                                          height: 50,
+                                          decoration: BoxDecoration(
+                                            // Cambiar color a dorado si es admin
+                                            color: isAdmin
+                                                ? const Color(
+                                                    0xFFFFD700) // Color dorado
+                                                : const Color(
+                                                    0xFF1E6C71), // Color normal
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              room['name']?[0] ??
+                                                  '?', // Primera letra del nombre
+                                              style: TextStyle(
+                                                color: isAdmin
+                                                    ? const Color(0xFF004D51)
+                                                    : Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 15),
-                                      // Nombre de la tribu
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              room['name'] ?? 'Unknown Room',
-                                              style: const TextStyle(
-                                                color: Color(0xFF004D51),
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  'Code: ${room['id']}',
-                                                  style: const TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 14,
-                                                  ),
+                                        const SizedBox(width: 15),
+                                        // Nombre de la tribu
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                room['name'] ?? 'Unknown Room',
+                                                style: const TextStyle(
+                                                  color: Color(0xFF004D51),
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
                                                 ),
-                                                if (isAdmin) ...[
-                                                  const SizedBox(width: 8),
-                                                  const Icon(
-                                                    Icons.star,
-                                                    color: Color(0xFFFFD700),
-                                                    size: 16,
-                                                  ),
-                                                  const Text(
-                                                    "Admin",
-                                                    style: TextStyle(
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    'Code: ${room['id']}',
+                                                    style: const TextStyle(
                                                       color: Colors.grey,
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                      fontSize: 14,
                                                     ),
                                                   ),
-                                                ]
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      // Indicador de personas
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF1E6C71),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.people,
-                                              color: Colors.white,
-                                              size: 16,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${room['user_count'] ?? 0}',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
+                                                  if (isAdmin) ...[
+                                                    const SizedBox(width: 8),
+                                                    const Icon(
+                                                      Icons.star,
+                                                      color: Color(0xFFFFD700),
+                                                      size: 16,
+                                                    ),
+                                                    const Text(
+                                                      "Admin",
+                                                      style: TextStyle(
+                                                        color: Colors.grey,
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ]
+                                                ],
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                        // Indicador de personas
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF1E6C71),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.people,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '${room['user_count'] ?? 0}',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              ));
+                            },
+                          ),
                         ),
-                      ),
 
             // Espacio expansible para llenar el resto de la pantalla
             //const Expanded(child: SizedBox()),

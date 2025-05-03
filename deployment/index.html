@@ -1169,7 +1169,7 @@
         
         options.forEach(option => {
             option.addEventListener('click', () => {
-                // Remove selected class from all options in the same question
+                // Remove  selected class from all options in the same question
                 const parentQuestion = option.closest('.question');
                 const siblingOptions = parentQuestion.querySelectorAll('.option');
                 siblingOptions.forEach(sib => sib.classList.remove('selected'));

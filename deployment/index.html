@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Cabra Labs</title>
+    <title>WeNomad.us | Tu aventura comienza aquí</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
         
         :root {
-            --bg-color: #0f0f0f;
+            --bg-color: #0a192f;
             --text-color: #ffffff;
-            --accent-color: #64ffda;
+            --accent-color: #ff7e5f;
+            --accent-gradient: linear-gradient(135deg, #ff7e5f, #feb47b);
             --secondary-color: #8892b0;
-            --muted-color: #495670;
+            --muted-color: #4a6572;
             --transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
         
@@ -22,7 +23,7 @@
             padding: 0;
             box-sizing: border-box;
             cursor: none;
-            font-family: 'Space Grotesk', sans-serif;
+            font-family: 'Montserrat', sans-serif;
         }
         
         body {
@@ -36,7 +37,7 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background-color: rgba(100, 255, 218, 0.3);
+            background-color: rgba(255, 126, 95, 0.3);
             transform: translate(-50%, -50%);
             pointer-events: none;
             mix-blend-mode: difference;
@@ -77,11 +78,12 @@
             align-items: center;
         }
         
-        .goat-icon {
+        .logo-icon {
             width: 80px;
             height: 80px;
             margin-bottom: 20px;
             animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 8px rgba(255, 126, 95, 0.6));
         }
         
         .progress-bar {
@@ -98,7 +100,7 @@
             top: 0;
             left: 0;
             height: 100%;
-            background-color: var(--accent-color);
+            background: var(--accent-gradient);
             width: 0%;
             transition: width 0.5s ease;
         }
@@ -110,14 +112,15 @@
         }
         
         .header {
-            padding: 2rem;
+            padding: 1.5rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: fixed;
             width: 100%;
             z-index: 100;
-            mix-blend-mode: difference;
+            background-color: rgba(10, 25, 47, 0.8);
+            backdrop-filter: blur(10px);
         }
         
         .logo {
@@ -136,6 +139,10 @@
             font-size: 1.8rem;
             font-weight: 700;
             letter-spacing: 1px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Playfair Display', serif;
         }
         
         .menu-toggle {
@@ -174,21 +181,24 @@
         }
         
         .menu-list li {
-            margin: 2rem 0;
+            margin: 1.5rem 0;
         }
         
         .menu-list a {
             color: var(--text-color);
             text-decoration: none;
-            font-size: 3rem;
-            font-weight: 700;
+            font-size: 2.5rem;
+            font-weight: 600;
             letter-spacing: 1px;
             position: relative;
             transition: var(--transition);
+            font-family: 'Playfair Display', serif;
         }
         
         .menu-list a:hover {
-            color: var(--accent-color);
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         .menu-list a:hover::before {
@@ -203,27 +213,26 @@
             height: 2px;
             bottom: -5px;
             left: 0;
-            background-color: var(--accent-color);
+            background: var(--accent-gradient);
             transform: scaleX(0);
             transform-origin: right;
             transition: var(--transition);
         }
         
-        section {
-            min-height: 100vh;
-            padding: 5rem 2rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        
         .hero {
-            align-items: flex-start;
+            height: 100vh;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 5%;
+            background: linear-gradient(to right, rgba(10, 25, 47, 0.9), rgba(10, 25, 47, 0.4)), 
+                        url('https://source.unsplash.com/1600x900/?travel,landscape') no-repeat center center/cover;
+            background-attachment: fixed;
         }
         
         .hero-content {
-            max-width: 900px;
+            max-width: 700px;
             position: relative;
             z-index: 1;
         }
@@ -232,7 +241,7 @@
             color: var(--accent-color);
             font-size: 1.2rem;
             margin-bottom: 1rem;
-            font-weight: 400;
+            font-weight: 500;
             opacity: 0;
             transform: translateY(20px);
             animation: fadeUp 0.8s forwards;
@@ -240,7 +249,7 @@
         }
         
         .hero-title {
-            font-size: 5rem;
+            font-size: 4.5rem;
             font-weight: 700;
             line-height: 1.1;
             margin-bottom: 2rem;
@@ -248,10 +257,13 @@
             transform: translateY(20px);
             animation: fadeUp 0.8s forwards;
             animation-delay: 0.7s;
+            font-family: 'Playfair Display', serif;
         }
         
         .hero-title span {
-            color: var(--accent-color);
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         .hero-desc {
@@ -263,17 +275,19 @@
             transform: translateY(20px);
             animation: fadeUp 0.8s forwards;
             animation-delay: 0.9s;
+            line-height: 1.8;
         }
         
         .cta-btn {
             display: inline-block;
-            padding: 1rem 2rem;
-            background-color: transparent;
-            border: 2px solid var(--accent-color);
-            color: var(--accent-color);
-            font-size: 1rem;
-            font-weight: 500;
+            padding: 1rem 2.5rem;
+            background: var(--accent-gradient);
+            color: var(--text-color);
+            font-size: 1.1rem;
+            font-weight: 600;
             text-decoration: none;
+            border-radius: 50px;
+            box-shadow: 0 10px 20px rgba(255, 126, 95, 0.3);
             transition: var(--transition);
             position: relative;
             overflow: hidden;
@@ -283,36 +297,45 @@
             animation-delay: 1.1s;
         }
         
-        .cta-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0%;
-            height: 100%;
-            background-color: var(--accent-color);
-            transition: var(--transition);
-            z-index: -1;
-        }
-        
         .cta-btn:hover {
-            color: var(--bg-color);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(255, 126, 95, 0.4);
         }
         
-        .cta-btn:hover::before {
-            width: 100%;
-        }
-        
-        .hero-image {
+        .scroll-indicator {
             position: absolute;
-            top: 50%;
-            right: 10%;
-            transform: translateY(-50%);
-            width: 300px;
-            height: 300px;
-            opacity: 0.2;
-            animation: rotate 20s linear infinite;
-            pointer-events: none;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+            animation-delay: 2s;
+        }
+        
+        .scroll-text {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .scroll-arrow {
+            width: 30px;
+            height: 30px;
+            border-right: 2px solid var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            transform: rotate(45deg);
+            animation: scrollDown 2s infinite;
+        }
+        
+        @keyframes scrollDown {
+            0% { transform: rotate(45deg) translate(-5px, -5px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: rotate(45deg) translate(5px, 5px); opacity: 0; }
         }
         
         @keyframes rotate {
@@ -327,114 +350,376 @@
             }
         }
         
-        .projects {
-            padding-top: 8rem;
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .how-it-works {
+            padding: 6rem 2rem;
+            background-color: #081425;
         }
         
         .section-title {
             font-size: 2.5rem;
-            margin-bottom: 3rem;
-            display: inline-block;
-            position: relative;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
         }
         
-        .section-title::after {
-            content: '';
-            display: block;
-            width: 100px;
-            height: 2px;
-            background-color: var(--accent-color);
-            margin-top: 10px;
+        .section-subtitle {
+            text-align: center;
+            color: var(--secondary-color);
+            max-width: 700px;
+            margin: 0 auto 4rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
         }
         
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 2rem;
+        .steps-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         
-        .project-card {
+        .step-card {
+            flex: 1 1 300px;
             background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
+            border-radius: 15px;
             padding: 2rem;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
-            height: 350px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
         }
         
-        .project-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, var(--accent-color) 0%, transparent 100%);
-            opacity: 0;
-            transition: var(--transition);
-            z-index: 0;
-        }
-        
-        .project-card:hover {
+        .step-card:hover {
             transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
         
-        .project-card:hover::before {
-            opacity: 0.1;
+        .step-number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 7rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.03);
+            z-index: 0;
+            font-family: 'Playfair Display', serif;
         }
         
-        .project-content {
+        .step-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
             position: relative;
             z-index: 1;
         }
         
-        .project-title {
+        .step-title {
             font-size: 1.5rem;
             margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
         }
         
-        .project-desc {
+        .step-desc {
             color: var(--secondary-color);
-            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+            line-height: 1.6;
         }
         
-        .project-tech {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--accent-color);
-            margin-bottom: 1rem;
+        .destinations {
+            padding: 6rem 2rem;
+            background-color: var(--bg-color);
         }
         
-        .project-tech span {
-            background-color: rgba(100, 255, 218, 0.1);
-            padding: 0.2rem 0.5rem;
-            border-radius: 5px;
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         
-        .project-links {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .project-links a {
-            color: var(--text-color);
-            font-size: 1.2rem;
+        .destination-card {
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            height: 400px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             transition: var(--transition);
         }
         
-        .project-links a:hover {
+        .destination-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .destination-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+        
+        .destination-card:hover .destination-image {
+            transform: scale(1.1);
+        }
+        
+        .destination-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            padding: 2rem;
+            transition: var(--transition);
+        }
+        
+        .destination-name {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .destination-desc {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+        
+        .destination-card:hover .destination-desc {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .destination-link {
             color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+        
+        .destination-link i {
+            margin-left: 5px;
+            transition: var(--transition);
+        }
+        
+        .destination-card:hover .destination-link {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .destination-link:hover i {
+            transform: translateX(5px);
+        }
+        
+        .start-journey {
+            padding: 8rem 2rem;
+            background: linear-gradient(to right, rgba(10, 25, 47, 0.9), rgba(10, 25, 47, 0.8)), 
+                        url('https://source.unsplash.com/1600x900/?travel,adventure') no-repeat center center/cover;
+            background-attachment: fixed;
+            text-align: center;
+        }
+        
+        .journey-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .journey-title {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .journey-desc {
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            line-height: 1.8;
+        }
+        
+        .questions-container {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .question {
+            display: none;
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        .question.active {
+            display: block;
+        }
+        
+        .question-text {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        .option {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+        
+        .option:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: var(--accent-color);
+        }
+        
+        .option.selected {
+            background: var(--accent-gradient);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .nav-btn:hover {
+            background: var(--accent-gradient);
+            color: white;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .nav-btn.next {
+            margin-left: auto;
+        }
+        
+        .testimonials {
+            padding: 6rem 2rem;
+            background-color: #081425;
+        }
+        
+        .testimonials-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .testimonial-slide {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .testimonial-slide.active {
+            display: block;
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        .testimonial-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 1.5rem;
+            border: 3px solid var(--accent-color);
+        }
+        
+        .testimonial-text {
+            font-size: 1.2rem;
+            line-height: 2;
+            margin-bottom: 2rem;
+            color: var(--secondary-color);
+            font-style: italic;
+        }
+        
+        .testimonial-text::before,
+        .testimonial-text::after {
+            content: '"';
+            color: var(--accent-color);
+            font-size: 2rem;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .testimonial-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .testimonial-location {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+        
+        .testimonial-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 3rem;
+            gap: 1rem;
+        }
+        
+        .testimonial-dot {
+            width: 12px;
+            height: 12px;
+            background-color: var(--muted-color);
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+        
+        .testimonial-dot.active {
+            background-color: var(--accent-color);
+            transform: scale(1.3);
         }
         
         .contact {
             min-height: 50vh;
-            background-color: rgba(255, 255, 255, 0.02);
+            background-color: var(--bg-color);
+            padding: 6rem 2rem;
         }
         
         .contact-content {
@@ -447,16 +732,21 @@
             color: var(--accent-color);
             font-size: 1.2rem;
             margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
         
         .contact-heading {
             font-size: 3rem;
             margin-bottom: 2rem;
+            font-family: 'Playfair Display', serif;
         }
         
         .contact-text {
             color: var(--secondary-color);
             margin-bottom: 3rem;
+            line-height: 1.8;
+            font-size: 1.1rem;
         }
         
         .socials {
@@ -480,8 +770,40 @@
         .footer {
             padding: 3rem 2rem;
             text-align: center;
+            background-color: #050d19;
             color: var(--secondary-color);
             font-size: 0.9rem;
+        }
+        
+        .footer-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .footer-links a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-links a:hover {
+            color: var(--accent-color);
+        }
+        
+        .copyright {
+            margin-top: 2rem;
+            font-size: 0.8rem;
         }
         
         @media (max-width: 768px) {
@@ -489,12 +811,22 @@
                 font-size: 3rem;
             }
             
-            .hero-image {
-                display: none;
+            .hero {
+                align-items: center;
+                text-align: center;
+                padding: 0 1rem;
             }
             
-            .project-card {
-                height: auto;
+            .questions-container {
+                padding: 2rem 1rem;
+            }
+            
+            .question-text {
+                font-size: 1.5rem;
+            }
+            
+            .options-container {
+                flex-direction: column;
             }
             
             .cursor, .cursor-follower {
@@ -505,7 +837,7 @@
                 cursor: auto;
             }
             
-            a, button {
+            a, button, .option {
                 cursor: pointer;
             }
         }
@@ -519,8 +851,8 @@
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
-            <svg class="goat-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="#64ffda">
-                <path d="M256.9 44.9L304 141.1v80c0 8.8-7.2 16-16 16H256.9l-13.1 65.3C261.2 320.6 288 360.7 288 408c0 57.4-46.6 104-104 104c-25.7 0-49.3-9.4-67.4-24.9l-29.6 29.6c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l29.6-29.6C78.4 446.3 69 422.7 69 397c0-47.3 26.8-87.4 44.2-105.8L100.1 226H64c-8.8 0-16-7.2-16-16V130c0-8.8 7.2-16 16-16h40.1C118.2 40.2 183.7 0 259.4 0c6.5 0 12.3 3.9 14.8 9.9s.9 12.9-3.4 17.4l-68 68c-23 23-26.2 59-7.6 85.9L256.9 44.9zm9.5 313.1C260.8 374.4 246.6 387 228 387c-23 0-41-17.5-41-40s18.5-41 41-41c18.6 0 32.8 13.1 38.4 29.6l.5 2.9-2.9 19.5H235c-4.4 0-8-3.6-8-8s3.6-8 8-8h22.1l-1.2 7.9c-2.2-7.5-9-13-17.9-13c-11.3 0-20 8.7-20 20s8.7 20 20 20c7.7 0 14-4.3 17.3-10.5l7.1 7.1zM301.6 24.4c-46.3 4.4-86.9 24.4-114.9 52.6c.3 .3 .7 .6 1 .9l68 68c32.2 32.2 37.8 81.1 16.6 119.1L281.1 319c.1-.2 .2-.3 .3-.5C292.6 300.2 308.4 288 328 288c39.7 0 72 32.3 72 72s-32.3 72-72 72c-19.6 0-35.4-12.2-46.6-30.5l-41.4-2.3V240h80c26.5 0 48-21.5 48-48V112H384c8.8 0 16-7.2 16-16V80c0-8.8-7.2-16-16-16H235.5L199.1 33.7c31-17.2 66.7-25.3 101.7-9.2l.8-.1zM184 456c8.8 0 16-7.2 16-16s-7.2-16-16-16c-26.5 0-48-21.5-48-48s21.5-48 48-48c8.8 0 16-7.2 16-16s-7.2-16-16-16c-44.2 0-80 35.8-80 80s35.8 80 80 80zm151-160c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h56c13.3 0 24-10.7 24-24s-10.7-24-24-24H351v-24c0-4.4-3.6-8-8-8h-8z"/>
+            <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="#ff7e5f">
+                <path d="M256 0c-141.4 0-256 114.6-256 256s114.6 256 256 256 256-114.6 256-256-114.6-256-256-256zm0 448c-106 0-192-86-192-192s86-192 192-192 192 86 192 192-86 192-192 192zm0-128c-35.3 0-64-28.7-64-64s28.7-64 64-64 64 28.7 64 64-28.7 64-64 64zm96-208c0 8.8-7.2 16-16 16s-16-7.2-16-16 7.2-16 16-16 16 7.2 16 16zm-288 0c0 8.8-7.2 16-16 16s-16-7.2-16-16 7.2-16 16-16 16 7.2 16 16z"/>
             </svg>
             <div class="progress-bar">
                 <div class="progress" id="progress"></div>
@@ -531,10 +863,10 @@
     <!-- Header -->
     <header class="header">
         <div class="logo">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
-                <path d="M256.9 44.9L304 141.1v80c0 8.8-7.2 16-16 16H256.9l-13.1 65.3C261.2 320.6 288 360.7 288 408c0 57.4-46.6 104-104 104c-25.7 0-49.3-9.4-67.4-24.9l-29.6 29.6c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l29.6-29.6C78.4 446.3 69 422.7 69 397c0-47.3 26.8-87.4 44.2-105.8L100.1 226H64c-8.8 0-16-7.2-16-16V130c0-8.8 7.2-16 16-16h40.1C118.2 40.2 183.7 0 259.4 0c6.5 0 12.3 3.9 14.8 9.9s.9 12.9-3.4 17.4l-68 68c-23 23-26.2 59-7.6 85.9L256.9 44.9zm9.5 313.1C260.8 374.4 246.6 387 228 387c-23 0-41-17.5-41-40s18.5-41 41-41c18.6 0 32.8 13.1 38.4 29.6l.5 2.9-2.9 19.5H235c-4.4 0-8-3.6-8-8s3.6-8 8-8h22.1l-1.2 7.9c-2.2-7.5-9-13-17.9-13c-11.3 0-20 8.7-20 20s8.7 20 20 20c7.7 0 14-4.3 17.3-10.5l7.1 7.1zM301.6 24.4c-46.3 4.4-86.9 24.4-114.9 52.6c.3 .3 .7 .6 1 .9l68 68c32.2 32.2 37.8 81.1 16.6 119.1L281.1 319c.1-.2 .2-.3 .3-.5C292.6 300.2 308.4 288 328 288c39.7 0 72 32.3 72 72s-32.3 72-72 72c-19.6 0-35.4-12.2-46.6-30.5l-41.4-2.3V240h80c26.5 0 48-21.5 48-48V112H384c8.8 0 16-7.2 16-16V80c0-8.8-7.2-16-16-16H235.5L199.1 33.7c31-17.2 66.7-25.3 101.7-9.2l.8-.1zM184 456c8.8 0 16-7.2 16-16s-7.2-16-16-16c-26.5 0-48-21.5-48-48s21.5-48 48-48c8.8 0 16-7.2 16-16s-7.2-16-16-16c-44.2 0-80 35.8-80 80s35.8 80 80 80zm151-160c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h56c13.3 0 24-10.7 24-24s-10.7-24-24-24H351v-24c0-4.4-3.6-8-8-8h-8z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="#ff7e5f">
+                <path d="M256 0c-141.4 0-256 114.6-256 256s114.6 256 256 256 256-114.6 256-256-114.6-256-256-256zm0 448c-106 0-192-86-192-192s86-192 192-192 192 86 192 192-86 192-192 192zm0-128c-35.3 0-64-28.7-64-64s28.7-64 64-64 64 28.7 64 64-28.7 64-64 64zm96-208c0 8.8-7.2 16-16 16s-16-7.2-16-16 7.2-16 16-16 16 7.2 16 16zm-288 0c0 8.8-7.2 16-16 16s-16-7.2-16-16 7.2-16 16-16 16 7.2 16 16z"/>
             </svg>
-            <span class="logo-text">LA CABRA LABS</span>
+            <span class="logo-text">WeNomad.us</span>
         </div>
         <button class="menu-toggle" id="menuToggle">
             <i class="fa fa-bars"></i>
@@ -545,73 +877,173 @@
     <div class="fullscreen-menu" id="fullscreenMenu">
         <ul class="menu-list">
             <li><a href="#" class="menu-link">Inicio</a></li>
-            <li><a href="#projects" class="menu-link">Proyectos</a></li>
-            <li><a href="#about" class="menu-link">Nosotros</a></li>
+            <li><a href="#how-it-works" class="menu-link">Cómo Funciona</a></li>
+            <li><a href="#destinations" class="menu-link">Destinos</a></li>
+            <li><a href="#start-journey" class="menu-link">Empezar</a></li>
             <li><a href="#contact" class="menu-link">Contacto</a></li>
         </ul>
     </div>
     
     <!-- Hero Section -->
     <section class="hero">
-        <svg class="hero-image" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" fill="#64ffda">
-            <path d="M256.9 44.9L304 141.1v80c0 8.8-7.2 16-16 16H256.9l-13.1 65.3C261.2 320.6 288 360.7 288 408c0 57.4-46.6 104-104 104c-25.7 0-49.3-9.4-67.4-24.9l-29.6 29.6c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l29.6-29.6C78.4 446.3 69 422.7 69 397c0-47.3 26.8-87.4 44.2-105.8L100.1 226H64c-8.8 0-16-7.2-16-16V130c0-8.8 7.2-16 16-16h40.1C118.2 40.2 183.7 0 259.4 0c6.5 0 12.3 3.9 14.8 9.9s.9 12.9-3.4 17.4l-68 68c-23 23-26.2 59-7.6 85.9L256.9 44.9zm9.5 313.1C260.8 374.4 246.6 387 228 387c-23 0-41-17.5-41-40s18.5-41 41-41c18.6 0 32.8 13.1 38.4 29.6l.5 2.9-2.9 19.5H235c-4.4 0-8-3.6-8-8s3.6-8 8-8h22.1l-1.2 7.9c-2.2-7.5-9-13-17.9-13c-11.3 0-20 8.7-20 20s8.7 20 20 20c7.7 0 14-4.3 17.3-10.5l7.1 7.1zM301.6 24.4c-46.3 4.4-86.9 24.4-114.9 52.6c.3 .3 .7 .6 1 .9l68 68c32.2 32.2 37.8 81.1 16.6 119.1L281.1 319c.1-.2 .2-.3 .3-.5C292.6 300.2 308.4 288 328 288c39.7 0 72 32.3 72 72s-32.3 72-72 72c-19.6 0-35.4-12.2-46.6-30.5l-41.4-2.3V240h80c26.5 0 48-21.5 48-48V112H384c8.8 0 16-7.2 16-16V80c0-8.8-7.2-16-16-16H235.5L199.1 33.7c31-17.2 66.7-25.3 101.7-9.2l.8-.1zM184 456c8.8 0 16-7.2 16-16s-7.2-16-16-16c-26.5 0-48-21.5-48-48s21.5-48 48-48c8.8 0 16-7.2 16-16s-7.2-16-16-16c-44.2 0-80 35.8-80 80s35.8 80 80 80zm151-160c-4.4 0-8 3.6-8 8v64c0 4.4 3.6 8 8 8h56c13.3 0 24-10.7 24-24s-10.7-24-24-24H351v-24c0-4.4-3.6-8-8-8h-8z"/>
-        </svg>
         <div class="hero-content">
-            <p class="hero-small-text">Bienvenidos a</p>
-            <h1 class="hero-title">LA <span>CABRA</span> LABS</h1>
-            <p class="hero-desc">Creamos experiencias digitales únicas e innovadoras. Diseño y desarrollo web con un enfoque creativo para marcas que buscan destacar en el mundo digital.</p>
-            <a href="#contact" class="cta-btn">CONTÁCTANOS</a>
+            <p class="hero-small-text">Descubre tu próxima aventura</p>
+            <h1 class="hero-title">WE <span>NOMAD</span> US</h1>
+            <p class="hero-desc">Tu asistente personal para encontrar el destino perfecto. Respondiendo unas simples preguntas, te ayudamos a descubrir lugares increíbles que se adapten a tu estilo de viaje.</p>
+            <a href="#start-journey" class="cta-btn">ENCUENTRA TU DESTINO</a>
+        </div>
+        <div class="scroll-indicator">
+            <p class="scroll-text">Desliza hacia abajo</p>
+            <div class="scroll-arrow"></div>
         </div>
     </section>
     
-    <!-- Projects Section -->
-    <section class="projects" id="projects">
-        <h2 class="section-title">Proyectos Destacados</h2>
-        <div class="projects-grid">
-            <div class="project-card">
-                <div class="project-content">
-                    <h3 class="project-title">Interfaz Innovadora</h3>
-                    <p class="project-desc">Diseño web experimental con interacciones únicas y animaciones fluidas.</p>
-                    <div class="project-tech">
-                        <span>React</span>
-                        <span>WebGL</span>
-                        <span>GSAP</span>
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <h2 class="section-title">Cómo Funciona</h2>
+        <p class="section-subtitle">Descubrir tu próximo destino es más fácil de lo que piensas. Con WeNomad.us, encontrar el lugar perfecto para tu aventura es un proceso sencillo y personalizado.</p>
+        <div class="steps-container">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <div class="step-icon"><i class="fas fa-question-circle"></i></div>
+                <h3 class="step-title">Responde Preguntas</h3>
+                <p class="step-desc">Contesta algunas preguntas sobre tus preferencias de viaje, presupuesto y estilo de aventura.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <div class="step-icon"><i class="fas fa-magic"></i></div>
+                <h3 class="step-title">Algoritmo Inteligente</h3>
+                <p class="step-desc">Nuestro sistema analiza tus respuestas y encuentra destinos que se adaptan perfectamente a ti.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <div class="step-icon"><i class="fas fa-map-marked-alt"></i></div>
+                <h3 class="step-title">Descubre Destinos</h3>
+                <p class="step-desc">Recibe recomendaciones personalizadas con información detallada para planificar tu viaje.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Destinations Section -->
+    <section class="destinations" id="destinations">
+        <h2 class="section-title">Destinos Populares</h2>
+        <p class="section-subtitle">Explora algunos de los destinos más populares que recomendamos a nuestros viajeros según sus preferencias y estilos de viaje.</p>
+        <div class="destinations-grid">
+            <div class="destination-card">
+                <img src="https://source.unsplash.com/600x800/?bali,indonesia" alt="Bali" class="destination-image">
+                <div class="destination-overlay">
+                    <h3 class="destination-name">Bali, Indonesia</h3>
+                    <p class="destination-desc">Playas paradisíacas, templos místicos y una cultura vibrante hacen de Bali un destino perfecto para aventureros y amantes de la tranquilidad.</p>
+                    <a href="#start-journey" class="destination-link">Descubrir más <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="destination-card">
+                <img src="https://source.unsplash.com/600x800/?kyoto,japan" alt="Kyoto" class="destination-image">
+                <div class="destination-overlay">
+                    <h3 class="destination-name">Kyoto, Japón</h3>
+                    <p class="destination-desc">Una perfecta fusión entre tradición y modernidad, con templos antiguos, jardines zen y una gastronomía excepcional.</p>
+                    <a href="#start-journey" class="destination-link">Descubrir más <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="destination-card">
+                <img src="https://source.unsplash.com/600x800/?lisbon,portugal" alt="Lisboa" class="destination-image">
+                <div class="destination-overlay">
+                    <h3 class="destination-name">Lisboa, Portugal</h3>
+                    <p class="destination-desc">Colinas empinadas, tranvías históricos y un ambiente bohemio caracterizan esta ciudad costera llena de encanto y música fado.</p>
+                    <a href="#start-journey" class="destination-link">Descubrir más <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Start Journey Section -->
+    <section class="start-journey" id="start-journey">
+        <div class="journey-content">
+            <h2 class="journey-title">¿Listo para descubrir tu destino ideal?</h2>
+            <p class="journey-desc">Responde a estas preguntas para que podamos recomendarte los destinos que mejor se adapten a tus preferencias y estilo de viaje.</p>
+            <div class="questions-container">
+                <div class="question active" data-question="1">
+                    <h3 class="question-text">¿Qué tipo de destino prefieres?</h3>
+                    <div class="options-container">
+                        <div class="option" data-value="beach">Playa y mar</div>
+                        <div class="option" data-value="mountain">Montaña y naturaleza</div>
+                        <div class="option" data-value="city">Ciudad y cultura</div>
+                        <div class="option" data-value="adventure">Aventura y adrenalina</div>
                     </div>
-                    <div class="project-links">
-                        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                        <a href="#" aria-label="External Link"><i class="fas fa-external-link-alt"></i></a>
+                    <div class="nav-buttons">
+                        <button class="nav-btn next" id="nextBtn">Siguiente</button>
+                    </div>
+                </div>
+                <div class="question" data-question="2">
+                    <h3 class="question-text">¿Cuál es tu presupuesto aproximado?</h3>
+                    <div class="options-container">
+                        <div class="option" data-value="budget">Económico</div>
+                        <div class="option" data-value="moderate">Moderado</div>
+                        <div class="option" data-value="luxury">Lujo</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn prev" id="prevBtn">Anterior</button>
+                        <button class="nav-btn next" id="nextBtn2">Siguiente</button>
+                    </div>
+                </div>
+                <div class="question" data-question="3">
+                    <h3 class="question-text">¿Cuánto tiempo planeas viajar?</h3>
+                    <div class="options-container">
+                        <div class="option" data-value="weekend">Fin de semana</div>
+                        <div class="option" data-value="week">Una semana</div>
+                        <div class="option" data-value="twoweeks">Dos semanas</div>
+                        <div class="option" data-value="month">Un mes o más</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn prev" id="prevBtn2">Anterior</button>
+                        <button class="nav-btn next" id="nextBtn3">Siguiente</button>
+                    </div>
+                </div>
+                <div class="question" data-question="4">
+                    <h3 class="question-text">¿Con quién viajas?</h3>
+                    <div class="options-container">
+                        <div class="option" data-value="solo">Solo</div>
+                        <div class="option" data-value="couple">En pareja</div>
+                        <div class="option" data-value="friends">Con amigos</div>
+                        <div class="option" data-value="family">En familia</div>
+                    </div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn prev" id="prevBtn3">Anterior</button>
+                        <button class="nav-btn next" id="submitBtn">Ver Resultados</button>
                     </div>
                 </div>
             </div>
-            <div class="project-card">
-                <div class="project-content">
-                    <h3 class="project-title">Experiencia 3D</h3>
-                    <p class="project-desc">Visualización 3D interactiva que revoluciona la forma de presentar productos.</p>
-                    <div class="project-tech">
-                        <span>Three.js</span>
-                        <span>WebXR</span>
-                        <span>Node.js</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                        <a href="#" aria-label="External Link"><i class="fas fa-external-link-alt"></i></a>
-                    </div>
-                </div>
+            <a href="#contact" class="cta-btn">¿NECESITAS AYUDA? CONTÁCTANOS</a>
+        </div>
+    </section>
+    
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <h2 class="section-title">Experiencias de Nómadas</h2>
+        <p class="section-subtitle">Descubre lo que opinan nuestros viajeros sobre las recomendaciones que les hemos dado y cómo les ha ido en sus aventuras.</p>
+        <div class="testimonials-container">
+            <div class="testimonial-slide active">
+                <img src="https://source.unsplash.com/200x200/?portrait,woman" alt="María García" class="testimonial-image">
+                <p class="testimonial-text">Gracias a WeNomad.us descubrí Chiang Mai, un lugar que jamás hubiera considerado por mi cuenta. Sus recomendaciones se adaptaron perfectamente a lo que buscaba: cultura, gastronomía y precios accesibles.</p>
+                <h4 class="testimonial-name">María García</h4>
+                <p class="testimonial-location">Barcelona, España</p>
             </div>
-            <div class="project-card">
-                <div class="project-content">
-                    <h3 class="project-title">Plataforma Inmersiva</h3>
-                    <p class="project-desc">Una solución digital que transforma la manera de interactuar con contenidos.</p>
-                    <div class="project-tech">
-                        <span>Vue.js</span>
-                        <span>Canvas API</span>
-                        <span>Firebase</span>
-                    </div>
-                    <div class="project-links">
-                        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                        <a href="#" aria-label="External Link"><i class="fas fa-external-link-alt"></i></a>
-                    </div>
-                </div>
+            <div class="testimonial-slide">
+                <img src="https://source.unsplash.com/200x200/?portrait,man" alt="Alex Johnson" class="testimonial-image">
+                <p class="testimonial-text">Como viajero de negocios frecuente, encontrar destinos que combinen trabajo y ocio es complicado. WeNomad.us me recomendó Lisboa y ha sido una de mis mejores experiencias laborales en el extranjero.</p>
+                <h4 class="testimonial-name">Alex Johnson</h4>
+                <p class="testimonial-location">Londres, Reino Unido</p>
+            </div>
+            <div class="testimonial-slide">
+                <img src="https://source.unsplash.com/200x200/?portrait,woman,asian" alt="Mei Wong" class="testimonial-image">
+                <p class="testimonial-text">Buscaba un destino para desconectar y meditar. Me recomendaron Bali y ha transformado mi vida. La precisión con la que acertaron mis necesidades fue impresionante.</p>
+                <h4 class="testimonial-name">Mei Wong</h4>
+                <p class="testimonial-location">Singapur</p>
+            </div>
+            <div class="testimonial-nav">
+                <div class="testimonial-dot active" data-slide="1"></div>
+                <div class="testimonial-dot" data-slide="2"></div>
+                <div class="testimonial-dot" data-slide="3"></div>
             </div>
         </div>
     </section>
@@ -619,22 +1051,30 @@
     <!-- Contact Section -->
     <section class="contact" id="contact">
         <div class="contact-content">
-            <p class="contact-title">¿Qué sigue?</p>
-            <h2 class="contact-heading">Hablemos de tu proyecto</h2>
-            <p class="contact-text">Estamos siempre interesados en nuevas oportunidades para crear experiencias digitales impactantes. Si tienes un proyecto en mente, ¡nos encantaría conocer más!</p>
-            <a href="mailto:info@lacabralabs.com" class="cta-btn">ENVÍANOS UN EMAIL</a>
+            <p class="contact-title">¿Tienes preguntas?</p>
+            <h2 class="contact-heading">Estamos aquí para ayudarte</h2>
+            <p class="contact-text">Nuestro equipo de expertos en viajes está disponible para resolver todas tus dudas y ayudarte a planificar la aventura perfecta. No dudes en contactarnos.</p>
+            <a href="mailto:info@wenomad.us" class="cta-btn">ENVÍANOS UN EMAIL</a>
             <div class="socials">
-                <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
                 <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Pinterest"><i class="fab fa-pinterest"></i></a>
             </div>
         </div>
     </section>
     
     <!-- Footer -->
     <footer class="footer">
-        <p>Diseñado y desarrollado con ♥ por La Cabra Labs © 2023</p>
+        <h3 class="footer-logo">WeNomad.us</h3>
+        <p>Descubre el mundo a tu manera</p>
+        <div class="footer-links">
+            <a href="#">Términos y Condiciones</a>
+            <a href="#">Política de Privacidad</a>
+            <a href="#">Sobre Nosotros</a>
+            <a href="#">Blog</a>
+        </div>
+        <p class="copyright">© 2023 WeNomad.us. Todos los derechos reservados.</p>
     </footer>
     
     <!-- Scripts -->
@@ -664,12 +1104,12 @@
         });
         
         // Interactivity for links and buttons
-        const links = document.querySelectorAll('a, button');
+        const links = document.querySelectorAll('a, button, .option');
         links.forEach(link => {
             link.addEventListener('mouseenter', () => {
                 cursor.style.transform = 'translate(-50%, -50%) scale(1.5)';
                 cursorFollower.style.transform = 'translate(-50%, -50%) scale(1.5)';
-                cursorFollower.style.backgroundColor = 'rgba(100, 255, 218, 0.2)';
+                cursorFollower.style.backgroundColor = 'rgba(255, 126, 95, 0.2)';
             });
             link.addEventListener('mouseleave', () => {
                 cursor.style.transform = 'translate(-50%, -50%) scale(1)';
@@ -720,6 +1160,85 @@
                 }
             }, 50);
         });
+        
+        // Question navigation
+        const options = document.querySelectorAll('.option');
+        const nextBtns = document.querySelectorAll('.next');
+        const prevBtns = document.querySelectorAll('.prev');
+        const questions = document.querySelectorAll('.question');
+        
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                // Remove selected class from all options in the same question
+                const parentQuestion = option.closest('.question');
+                const siblingOptions = parentQuestion.querySelectorAll('.option');
+                siblingOptions.forEach(sib => sib.classList.remove('selected'));
+                
+                // Add selected class to clicked option
+                option.classList.add('selected');
+            });
+        });
+        
+        nextBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const currentQuestion = btn.closest('.question');
+                const currentQuestionNum = parseInt(currentQuestion.dataset.question);
+                const nextQuestionNum = currentQuestionNum + 1;
+                const nextQuestion = document.querySelector(`.question[data-question="${nextQuestionNum}"]`);
+                
+                if (nextQuestion) {
+                    currentQuestion.classList.remove('active');
+                    nextQuestion.classList.add('active');
+                }
+            });
+        });
+        
+        prevBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const currentQuestion = btn.closest('.question');
+                const currentQuestionNum = parseInt(currentQuestion.dataset.question);
+                const prevQuestionNum = currentQuestionNum - 1;
+                const prevQuestion = document.querySelector(`.question[data-question="${prevQuestionNum}"]`);
+                
+                if (prevQuestion) {
+                    currentQuestion.classList.remove('active');
+                    prevQuestion.classList.add('active');
+                }
+            });
+        });
+        
+        // Submit button action
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            alert('¡Gracias por completar el cuestionario! En base a tus respuestas, te recomendamos visitar Bali, Indonesia. Es un destino que combina perfectamente con tus preferencias de viaje. ¡Contáctanos para más detalles!');
+        });
+        
+        // Testimonial slider
+        const testimonialDots = document.querySelectorAll('.testimonial-dot');
+        const testimonialSlides = document.querySelectorAll('.testimonial-slide');
+        
+        testimonialDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const slideNum = dot.dataset.slide;
+                
+                testimonialDots.forEach(d => d.classList.remove('active'));
+                testimonialSlides.forEach(s => s.classList.remove('active'));
+                
+                dot.classList.add('active');
+                document.querySelector(`.testimonial-slide:nth-child(${slideNum})`).classList.add('active');
+            });
+        });
+        
+        // Auto-rotate testimonials
+        let currentSlide = 1;
+        setInterval(() => {
+            testimonialDots.forEach(d => d.classList.remove('active'));
+            testimonialSlides.forEach(s => s.classList.remove('active'));
+            
+            currentSlide = currentSlide >= testimonialSlides.length ? 1 : currentSlide + 1;
+            
+            document.querySelector(`.testimonial-dot[data-slide="${currentSlide}"]`).classList.add('active');
+            document.querySelector(`.testimonial-slide:nth-child(${currentSlide})`).classList.add('active');
+        }, 5000);
     </script>
 </body>
 </html>

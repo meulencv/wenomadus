@@ -5,6 +5,7 @@ import 'create_room_screen.dart';
 import 'map_screen.dart';
 import 'room_detail_screen.dart'; // Asegúrate de importar la pantalla de detalles
 import '../utils/room_notifier.dart'; // Add this import
+import 'collection.dart'; // Importamos la pantalla de colección
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -743,6 +744,10 @@ class _HomeScreenState extends State<HomeScreen> {
         } else if (icon == Icons.public) {
           Navigator.of(context)
               .push(MaterialPageRoute(builder: (context) => MapScreen()));
+        } else if (icon == Icons.inventory_2) {
+          // Navegación a la pantalla de colección cuando se presiona el botón de caja
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => CollectionScreen()));
         } else {
           // Manejar otros botones si es necesario
         }

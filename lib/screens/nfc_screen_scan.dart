@@ -24,13 +24,20 @@ class NFCScreenScan extends StatefulWidget {
   State<NFCScreenScan> createState() => _NFCScreenScanState();
 }
 
-class _NFCScreenScanState extends State<NFCScreenScan> {
+class _NFCScreenScanState extends State<NFCScreenScan>
+    with TickerProviderStateMixin {
   bool _isScanning = false;
   String _scanStatus = "Buscando etiquetas NFC...";
   ValueNotifier<dynamic> _tagResult = ValueNotifier(null);
   final _supabase = Supabase.instance.client;
   bool _saving = false;
   CollectibleItem? _scannedItem;
+
+  // Controladores de animación
+  late AnimationController _scaleController;
+  late AnimationController _rotationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _rotationAnimation;
 
   // Listas de elementos coleccionables
   final List<CollectibleItem> foodItems = [
@@ -78,12 +85,50 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
   void initState() {
     super.initState();
     _startNFCScan();
+
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _rotationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.5)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 40.0,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.5, end: 1.0)
+            .chain(CurveTween(curve: Curves.elasticIn)),
+        weight: 60.0,
+      ),
+    ]).animate(_scaleController);
+
+    _rotationAnimation = Tween<double>(
+      begin: 0,
+      end: 2 * 3.14159,
+    ).animate(CurvedAnimation(
+      parent: _rotationController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   @override
   void dispose() {
+    _scaleController.dispose();
+    _rotationController.dispose();
     _stopNFCScan();
     super.dispose();
+  }
+
+  void _playEpicRevealAnimation() {
+    _scaleController.forward(from: 0.0);
+    _rotationController.forward(from: 0.0);
   }
 
   Future<void> _startNFCScan() async {
@@ -183,6 +228,9 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
       _scanStatus = "Guardando datos...";
     });
 
+    // Reproducir la animación épica inmediatamente al detectar
+    _playEpicRevealAnimation();
+
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
@@ -276,34 +324,47 @@ class _NFCScreenScanState extends State<NFCScreenScan> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: _isScanning
-                      ? (_saving ? Colors.orange : Colors.green)
-                      : Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: _scannedItem != null
-                    ? ClipOval(
-                        child: Image.network(
-                          'https://www.wenomad.us/NFT/${_scannedItem!.category}/${_scannedItem!.image}',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              _saving ? Icons.cloud_upload : Icons.nfc,
-                              size: 100,
-                              color: Colors.white,
-                            );
-                          },
+              ScaleTransition(
+                scale: _scaleAnimation,
+                child: RotationTransition(
+                  turns: _rotationAnimation,
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: _isScanning
+                          ? (_saving ? Colors.orange : Colors.green)
+                          : Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.3),
+                          blurRadius: 20,
+                          spreadRadius: 5,
                         ),
-                      )
-                    : Icon(
-                        _saving ? Icons.cloud_upload : Icons.nfc,
-                        size: 100,
-                        color: _isScanning ? Colors.white : Colors.white70,
-                      ),
+                      ],
+                    ),
+                    child: _scannedItem != null
+                        ? ClipOval(
+                            child: Image.network(
+                              'https://www.wenomad.us/NFT/${_scannedItem!.category}/${_scannedItem!.image}',
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  _saving ? Icons.cloud_upload : Icons.nfc,
+                                  size: 100,
+                                  color: Colors.white,
+                                );
+                              },
+                            ),
+                          )
+                        : Icon(
+                            _saving ? Icons.cloud_upload : Icons.nfc,
+                            size: 100,
+                            color: _isScanning ? Colors.white : Colors.white70,
+                          ),
+                  ),
+                ),
               ),
               const SizedBox(height: 40),
               Padding(

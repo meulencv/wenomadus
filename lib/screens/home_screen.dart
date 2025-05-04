@@ -669,34 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        backgroundColor: const Color(0xFF004D51),
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: '',
-          ),
-        ],
-      ),
+      // El bottomNavigationBar ha sido eliminado
     );
   }
 
@@ -713,8 +686,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => CollectionScreen()));
         } else if (icon == Icons.nfc) {
-          Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => NFCScreenScan()));
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (context) => NFCScreenScan()));
         }
       },
       child: Container(
